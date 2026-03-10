@@ -17,16 +17,26 @@ export async function getBrewById(id: string, userId: string) {
 }
 
 export async function createBrew(userId: string, data: CreateBrewDto) {
+  const { pourDetails, ...rest } = data
   return prisma.brewJournal.create({
-    data: { ...data, userId, tastingNotes: data.tastingNotes ?? [] },
+    data: {
+      ...rest,
+      userId,
+      tastingNotes: data.tastingNotes ?? [],
+      ...(pourDetails !== undefined && { pourDetails: pourDetails as object[] }),
+    },
     include: { bean: true },
   })
 }
 
 export async function updateBrew(id: string, userId: string, data: Partial<CreateBrewDto>) {
+  const { beanId, pourDetails, ...rest } = data
   return prisma.brewJournal.updateMany({
     where: { id, userId },
-    data,
+    data: {
+      ...rest,
+      ...(pourDetails !== undefined && { pourDetails: pourDetails as object[] }),
+    },
   })
 }
 

@@ -1,0 +1,30 @@
+# Brewnal — Project Context
+
+Specialty coffee brewing journal app.
+
+## Stack
+
+- FE: React + Vite + TypeScript (apps/web)
+- BE: Node.js + Fastify + TypeScript (apps/api)
+- ORM: Prisma
+- DB: PostgreSQL (Neon)
+- Storage: Supabase Storage
+- AI: Anthropic Claude API Vision
+- i18n: i18next (ID + EN)
+
+## Current Phase
+
+MVP — urutan dev:
+
+1. Auth flow (register, login, JWT) ← NEXT
+2. Beans CRUD
+3. Brew Journal CRUD
+4. AI scan kemasan
+5. Dashboard
+
+## Key Decisions
+
+- Sensory scale 1-3 (bodyness, sweetness, acidity)
+- Expected (dari beans/kemasan) vs Actual (dari brew)
+- Light mode default, dark mode opsional
+- Bahasa Indonesia sebagai default language

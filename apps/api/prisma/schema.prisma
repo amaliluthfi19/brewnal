@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  username     String        @unique
+  passwordHash String
+  displayName  String?
+  avatarUrl    String?
+  createdAt    DateTime      @default(now())
+  beans        Bean[]
+  brews        BrewJournal[]
+}
+
+model Bean {
+  id               String        @id @default(cuid())
+  userId           String
+  roastery         String
+  beanName         String
+  originCountry    String
+  originRegion     String?
+  altitude         Int?
+  varietal         String?
+  process          String?
+  roastLevel       String?
+  roastDate        DateTime?
+  photoUrl         String?
+  notes            String?
+  scannedAt        DateTime?
+  expectedBodyness Int?
+  expectedSweetness Int?
+  expectedAcidity  Int?
+  createdAt        DateTime      @default(now())
+  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  brews            BrewJournal[]
+}
+
+model BrewJournal {
+  id              String    @id @default(cuid())
+  userId          String
+  beanId          String
+  brewMethod      String
+  grinder         String?
+  grindSize       String?
+  doseGrams       Float?
+  waterMl         Float?
+  ratio           String?
+  waterTempC      Int?
+  brewTimeSec     Int?
+  pourCount       Int?
+  pourDetails     Json?
+  tastingNotes    String[]
+  rating          Int?
+  notes           String?
+  isPublic        Boolean   @default(false)
+  actualBodyness  Int?
+  actualSweetness Int?
+  actualAcidity   Int?
+  createdAt       DateTime  @default(now())
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bean            Bean      @relation(fields: [beanId], references: [id], onDelete: Cascade)
+}

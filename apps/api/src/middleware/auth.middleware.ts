@@ -7,3 +7,5 @@ export async function authenticate(req: FastifyRequest, reply: FastifyReply) {
     reply.code(401).send({ error: 'Unauthorized', statusCode: 401 })
   }
 }
+
+

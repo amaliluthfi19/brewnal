@@ -28,7 +28,24 @@ const id = {
     registerTitle: 'Mulai perjalanan kopi kamu',
     noAccount: 'Belum punya akun?',
     hasAccount: 'Sudah punya akun?',
-    brewerLevel: 'Brewer Level'
+    brewerLevel: 'Brewer Level',
+    onboarding: {
+      title: 'Kamu lebih sering brew sebagai apa?',
+      subtitle: 'Kami akan sesuaikan pengalaman Brewnal untukmu.',
+      skip: 'Lewati',
+      cta: 'Mulai Brewnal',
+      changeable: 'Bisa diubah kapan saja di Settings',
+      identities: {
+        beginner: 'Brewer Beginner',
+        beginner_sub: 'Baru mulai eksplorasi kopi specialty',
+        home_brewer: 'Home Brewer',
+        home_brewer_sub: 'Brew rutin di rumah, punya setup sendiri',
+        barista_cafe: 'Barista Caf\u00e9',
+        barista_cafe_sub: 'Bekerja atau magang di kafe specialty',
+        barista_competition: 'Barista Kompetisi',
+        barista_competition_sub: 'Persiapan atau aktif ikut kompetisi brewing',
+      },
+    },
   },
   beans: {
     title: 'Koleksi Biji Kopi',
@@ -111,7 +128,24 @@ const en = {
     registerTitle: 'Start your coffee journey',
     noAccount: "Don't have an account?",
     hasAccount: 'Already have an account?',
-    brewerLevel: 'Brewer Level'
+    brewerLevel: 'Brewer Level',
+    onboarding: {
+      title: 'How do you usually brew?',
+      subtitle: "We'll personalize your Brewnal experience.",
+      skip: 'Skip',
+      cta: 'Start Brewnal',
+      changeable: 'You can change this anytime in Settings',
+      identities: {
+        beginner: 'Brewer Beginner',
+        beginner_sub: 'Just getting started with specialty coffee',
+        home_brewer: 'Home Brewer',
+        home_brewer_sub: 'Brew regularly at home with my own setup',
+        barista_cafe: 'Caf\u00e9 Barista',
+        barista_cafe_sub: 'Working or training at a specialty caf\u00e9',
+        barista_competition: 'Competition Barista',
+        barista_competition_sub: 'Preparing for or actively competing in brewing competitions',
+      },
+    },
   },
   beans: {
     title: 'My Coffee Beans',

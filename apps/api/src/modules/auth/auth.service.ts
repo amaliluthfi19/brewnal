@@ -1,11 +1,26 @@
 import bcrypt from 'bcryptjs'
 import { prisma } from '../../lib/prisma'
 
+type BrewerIdentity = 'BEGINNER' | 'HOME_BREWER' | 'BARISTA_CAFE' | 'BARISTA_COMPETITION'
+
+const userSelect = {
+  id: true,
+  email: true,
+  username: true,
+  displayName: true,
+  avatarUrl: true,
+  brewerIdentity: true,
+  identitySetAt: true,
+  onboardingCompleted: true,
+  createdAt: true,
+}
+
 export async function registerUser(data: {
   email: string
   username: string
   password: string
   displayName?: string
+  brewerIdentity?: BrewerIdentity | null
 }) {
   const passwordHash = await bcrypt.hash(data.password, 12)
   return prisma.user.create({
@@ -14,8 +29,11 @@ export async function registerUser(data: {
       username: data.username.toLowerCase(),
       passwordHash,
       displayName: data.displayName,
+      brewerIdentity: data.brewerIdentity ?? undefined,
+      identitySetAt: data.brewerIdentity ? new Date() : undefined,
+      onboardingCompleted: !!data.brewerIdentity,
     },
-    select: { id: true, email: true, username: true, displayName: true, avatarUrl: true, createdAt: true },
+    select: userSelect,
   })
 }
 
@@ -35,6 +53,6 @@ export async function loginUser(email: string, password: string) {
 export async function getUserById(id: string) {
   return prisma.user.findUnique({
     where: { id },
-    select: { id: true, email: true, username: true, displayName: true, avatarUrl: true, createdAt: true },
+    select: userSelect,
   })
 }

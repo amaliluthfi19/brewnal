@@ -7,6 +7,7 @@ import { authRoutes } from './modules/auth/auth.routes'
 import { beansRoutes } from './modules/beans/beans.routes'
 import { brewRoutes } from './modules/brew/brew.routes'
 import { aiRoutes } from './modules/ai/ai.routes'
+import { profileRoutes } from './modules/profile/profile.routes'
 
 const app = Fastify({ logger: { level: 'warn' } })
 
@@ -36,6 +37,7 @@ app.register(authRoutes, { prefix: '/auth' })
 app.register(beansRoutes, { prefix: '/beans' })
 app.register(brewRoutes, { prefix: '/brews' })
 app.register(aiRoutes, { prefix: '/ai' })
+app.register(profileRoutes, { prefix: '/profile' })
 
 // Health check
 app.get('/health', async () => ({ status: 'ok', app: 'Brewnal API' }))

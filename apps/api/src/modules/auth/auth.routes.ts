@@ -7,15 +7,16 @@ export async function authRoutes(app: FastifyInstance) {
   // POST /auth/register
   app.post('/register', async (req, reply) => {
     const lang = getLang(req.headers['accept-language'])
-    const { email, username, password, displayName } = req.body as {
+    const { email, username, password, displayName, brewerIdentity } = req.body as {
       email: string
       username: string
       password: string
       displayName?: string
+      brewerIdentity?: string | null
     }
 
     try {
-      const user = await registerUser({ email, username, password, displayName })
+      const user = await registerUser({ email, username, password, displayName, brewerIdentity: brewerIdentity as any })
       const token = app.jwt.sign({ id: user.id, email: user.email })
       return reply.code(201).send({
         data: { token, user },

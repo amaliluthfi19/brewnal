@@ -10,13 +10,16 @@ export interface User {
   displayName?: string
   avatarUrl?: string
   createdAt: string
-  brewerLevel: BrewerLevel
+  brewerIdentity?: BrewerIdentity | null
+  identitySetAt?: string | null
+  onboardingCompleted: boolean
 }
 
-export enum BrewerLevel {
-  BEGINNER,
-  HOMEBREWER,
-  BARISTA
+export enum BrewerIdentity {
+  BEGINNER = 'BEGINNER',
+  HOME_BREWER = 'HOME_BREWER',
+  BARISTA_CAFE = 'BARISTA_CAFE',
+  BARISTA_COMPETITION = 'BARISTA_COMPETITION',
 }
 
 export interface AuthResponse {

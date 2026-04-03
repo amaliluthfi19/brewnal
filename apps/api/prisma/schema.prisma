@@ -8,16 +8,18 @@ datasource db {
 }
 
 model User {
-  id           String        @id @default(cuid())
-  email        String        @unique
-  username     String        @unique
-  passwordHash String
-  displayName  String?
-  avatarUrl    String?
-  createdAt    DateTime      @default(now())
-  beans        Bean[]
-  brews        BrewJournal[]
-  brewerLevel  BrewerLevel
+  id                  String          @id @default(cuid())
+  email               String          @unique
+  username            String          @unique
+  passwordHash        String
+  displayName         String?
+  avatarUrl           String?
+  createdAt           DateTime        @default(now())
+  beans               Bean[]
+  brews               BrewJournal[]
+  brewerIdentity      BrewerIdentity?
+  identitySetAt       DateTime?
+  onboardingCompleted Boolean         @default(false)
 }
 
 model Bean {
@@ -69,8 +71,9 @@ model BrewJournal {
   bean            Bean      @relation(fields: [beanId], references: [id], onDelete: Cascade)
 }
 
-enum BrewerLevel {
+enum BrewerIdentity {
   BEGINNER
-  HOMEBREWER
-  BARISTA
+  HOME_BREWER
+  BARISTA_CAFE
+  BARISTA_COMPETITION
 }

@@ -8,7 +8,7 @@ import { beansRoutes } from './modules/beans/beans.routes'
 import { brewRoutes } from './modules/brew/brew.routes'
 import { aiRoutes } from './modules/ai/ai.routes'
 
-const app = Fastify({ logger: true })
+const app = Fastify({ logger: { level: 'warn' } })
 
 // Plugins
 app.register(cors, {
@@ -22,6 +22,13 @@ app.register(jwt, {
 
 app.register(multipart, {
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+})
+
+// Log all responses
+app.addHook('onSend', async (req, reply, payload) => {
+  if (req.method === 'OPTIONS') return payload
+  console.log(`[${reply.statusCode}] ${req.method} ${req.url}`, payload)
+  return payload
 })
 
 // Routes

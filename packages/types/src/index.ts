@@ -10,6 +10,13 @@ export interface User {
   displayName?: string
   avatarUrl?: string
   createdAt: string
+  brewerLevel: BrewerLevel
+}
+
+export enum BrewerLevel {
+  BEGINNER,
+  HOMEBREWER,
+  BARISTA
 }
 
 export interface AuthResponse {

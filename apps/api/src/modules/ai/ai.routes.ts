@@ -22,7 +22,8 @@ export async function aiRoutes(app: FastifyInstance) {
 
       const result = await scanBeanLabel(base64, mimeType)
       return reply.send({ data: result, message: t('ai.scan_success', lang) })
-    } catch {
+    } catch (err) {
+      console.log(`${err}`)
       return reply.code(500).send({ error: t('ai.scan_failed', lang), statusCode: 500 })
     }
   })

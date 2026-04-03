@@ -17,6 +17,7 @@ model User {
   createdAt    DateTime      @default(now())
   beans        Bean[]
   brews        BrewJournal[]
+  brewerLevel  BrewerLevel
 }
 
 model Bean {
@@ -66,4 +67,10 @@ model BrewJournal {
   createdAt       DateTime  @default(now())
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   bean            Bean      @relation(fields: [beanId], references: [id], onDelete: Cascade)
+}
+
+enum BrewerLevel {
+  BEGINNER
+  HOMEBREWER
+  BARISTA
 }

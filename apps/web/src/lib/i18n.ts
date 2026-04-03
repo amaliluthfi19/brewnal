@@ -28,6 +28,7 @@ const id = {
     registerTitle: 'Mulai perjalanan kopi kamu',
     noAccount: 'Belum punya akun?',
     hasAccount: 'Sudah punya akun?',
+    brewerLevel: 'Brewer Level'
   },
   beans: {
     title: 'Koleksi Biji Kopi',
@@ -110,6 +111,7 @@ const en = {
     registerTitle: 'Start your coffee journey',
     noAccount: "Don't have an account?",
     hasAccount: 'Already have an account?',
+    brewerLevel: 'Brewer Level'
   },
   beans: {
     title: 'My Coffee Beans',

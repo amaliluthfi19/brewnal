@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Channels (R G B) for opacity modifier support */
+  --color-primary-ch:    255 107 53;
+  --color-secondary-ch:  46 196 182;
+  --color-danger-ch:     239 35 60;
+
+  /* Solid tokens */
+  --color-bg:             #FFFBF0;
+  --color-surface:        #FFF3D6;
+  --color-surface-raised: #FFE8B0;
+  --color-primary-hover:  #E85520;
+  --color-pop:            #FFBE0B;
+  --color-ink:            #1A1A2E;
+  --color-muted:          #8B8FA8;
+  --color-success:        #06D6A0;
+  --color-border:         #E8E0CC;
+}
+
+[data-theme="dark"] {
+  --color-primary-ch:    255 127 80;
+  --color-secondary-ch:  61 219 208;
+  --color-danger-ch:     255 77 109;
+
+  --color-bg:             #1A1035;
+  --color-surface:        #261848;
+  --color-surface-raised: #32205C;
+  --color-primary-hover:  #FF6B35;
+  --color-pop:            #FFD23F;
+  --color-ink:            #FFFBF0;
+  --color-muted:          #9B93B8;
+  --color-success:        #0FFFC1;
+  --color-border:         #3D2F6B;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-ink);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}

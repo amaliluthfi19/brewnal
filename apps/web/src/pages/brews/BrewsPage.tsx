@@ -11,7 +11,7 @@ export function BrewsPage() {
 
   const { data: brewsRes, isLoading } = useQuery({
     queryKey: ['brews'],
-    queryFn: brewsService.getAll,
+    queryFn: () => brewsService.getAll(),
   })
 
   const { data: beansRes } = useQuery({ queryKey: ['beans'], queryFn: beansService.getAll })

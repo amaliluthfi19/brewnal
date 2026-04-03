@@ -10,7 +10,7 @@ export function DashboardPage() {
   const user = useAuthStore((s) => s.user)
 
   const { data: beansRes } = useQuery({ queryKey: ['beans'], queryFn: beansService.getAll })
-  const { data: brewsRes } = useQuery({ queryKey: ['brews'], queryFn: brewsService.getAll })
+  const { data: brewsRes } = useQuery({ queryKey: ['brews'], queryFn: () => brewsService.getAll()})
 
   const beans = beansRes?.data.data ?? []
   const brews = brewsRes?.data.data ?? []

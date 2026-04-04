@@ -1,7 +1,6 @@
 [build]
-  base    = "apps/web"
-  command = "pnpm run build"
-  publish = "dist"
+  command = "turbo run build --filter web"
+  publish = "apps/web/dist"
 
 [[redirects]]
   from   = "/api/*"

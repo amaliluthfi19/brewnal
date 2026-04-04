@@ -43,4 +43,4 @@ jobs:
             cd ${{ secrets.APP_DIR }} || exit 1
             git pull origin master
             pnpm install
-            pnpm --filter web build
+            VITE_API_URL=${{ secrets.VITE_API_URL }} pnpm --filter web build

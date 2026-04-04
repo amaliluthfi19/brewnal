@@ -6,7 +6,8 @@
       "Bash(ls -la /c/Users/amali/Documents/dev/projects/brewnal/apps/web/ | grep -E \"\\\\.\\(ts|js|json\\)$\")",
       "Bash(tree /c/Users/amali/Documents/dev/projects/brewnal/apps/web -L 3 -I node_modules 2>/dev/null || find /c/Users/amali/Documents/dev/projects/brewnal/apps/web -not -path \"*/node_modules*\" -type f -o -type d | sort)",
       "Bash(gh api:*)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(pnpm --filter api add dotenv)"
     ]
   }
 }

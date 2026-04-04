@@ -1,0 +1,15 @@
+[build]
+  base    = "apps/web"
+  command = "pnpm run build"
+  publish = "dist"
+
+[[redirects]]
+  from   = "/api/*"
+  to     = "http://38.147.122.120/api/:splat"
+  status = 200
+  force  = true
+
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200

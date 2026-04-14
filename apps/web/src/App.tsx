@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import './lib/i18n'
@@ -21,14 +22,22 @@ const queryClient = new QueryClient({
 })
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const { isAuthenticated, isInitializing } = useAuthStore()
+  if (isInitializing) return null
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />
+}
+
+function AuthInit() {
+  const initAuth = useAuthStore((s) => s.initAuth)
+  useEffect(() => { initAuth() }, [])
+  return null
 }
 
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
+        <AuthInit />
         <Routes>
           {/* Public */}
           <Route path="/login" element={<LoginPage />} />

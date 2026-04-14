@@ -46,7 +46,7 @@ export function RegisterPage() {
         displayName: form.displayName || undefined,
         brewerIdentity,
       })
-      setAuth(res.data.data.user, res.data.data.token)
+      setAuth(res.data.data.user)
       navigate('/')
     } catch (err: any) {
       setError(err.response?.data?.error ?? 'Registration failed')

@@ -3,24 +3,29 @@ import { User } from '@brewnal/types'
 
 interface AuthState {
   user: User | null
-  token: string | null
   isAuthenticated: boolean
-  setAuth: (user: User, token: string) => void
+  isInitializing: boolean
+  setAuth: (user: User) => void
   logout: () => void
+  initAuth: () => Promise<void>
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
-  token: localStorage.getItem('brewnal_token'),
-  isAuthenticated: !!localStorage.getItem('brewnal_token'),
+  isAuthenticated: false,
+  isInitializing: true,
 
-  setAuth: (user, token) => {
-    localStorage.setItem('brewnal_token', token)
-    set({ user, token, isAuthenticated: true })
-  },
+  setAuth: (user) => set({ user, isAuthenticated: true }),
 
-  logout: () => {
-    localStorage.removeItem('brewnal_token')
-    set({ user: null, token: null, isAuthenticated: false })
+  logout: () => set({ user: null, isAuthenticated: false }),
+
+  initAuth: async () => {
+    try {
+      const { authService } = await import('../services/auth.service')
+      const res = await authService.me()
+      set({ user: res.data.data, isAuthenticated: true, isInitializing: false })
+    } catch {
+      set({ user: null, isAuthenticated: false, isInitializing: false })
+    }
   },
 }))

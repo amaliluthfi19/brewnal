@@ -21,7 +21,7 @@ export function LoginPage() {
     setLoading(true)
     try {
       const res = await authService.login(email, password)
-      setAuth(res.data.data.user, res.data.data.token)
+      setAuth(res.data.data.user)
       navigate('/')
     } catch (err: any) {
       console.error('Login error:', err)

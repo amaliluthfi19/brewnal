@@ -1,6 +1,7 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '../../store/auth.store'
+import { authService } from '../../services/auth.service'
 import { LanguageToggle } from '../ui/LanguageToggle'
 
 export function Navbar() {
@@ -8,7 +9,8 @@ export function Navbar() {
   const { user, logout } = useAuthStore()
   const navigate = useNavigate()
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try { await authService.logout() } catch {}
     logout()
     navigate('/login')
   }

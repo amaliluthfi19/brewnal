@@ -2,6 +2,7 @@ import 'dotenv/config'
 import Fastify from 'fastify'
 import cors from '@fastify/cors'
 import jwt from '@fastify/jwt'
+import cookie from '@fastify/cookie'
 import multipart from '@fastify/multipart'
 
 import { authRoutes } from './modules/auth/auth.routes'
@@ -18,8 +19,12 @@ app.register(cors, {
   credentials: true,
 })
 
+app.register(cookie)
+
 app.register(jwt, {
   secret: process.env.JWT_SECRET ?? 'fallback-secret',
+  sign: { expiresIn: process.env.JWT_EXPIRES_IN ?? '7d' },
+  cookie: { cookieName: 'token', signed: false },
 })
 
 app.register(multipart, {

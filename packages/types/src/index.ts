@@ -23,7 +23,6 @@ export enum BrewerIdentity {
 }
 
 export interface AuthResponse {
-  token: string
   user: User
 }
 

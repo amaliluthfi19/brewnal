@@ -71,6 +71,15 @@ model BrewJournal {
   bean            Bean      @relation(fields: [beanId], references: [id], onDelete: Cascade)
 }
 
+model TokenBlacklist {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([expiresAt])
+}
+
 enum BrewerIdentity {
   BEGINNER
   HOME_BREWER

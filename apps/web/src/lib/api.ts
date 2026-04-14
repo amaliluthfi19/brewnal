@@ -3,17 +3,13 @@ import axios from 'axios'
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:3001',
   headers: { 'Content-Type': 'application/json' },
+  withCredentials: true, // send httpOnly cookie on every request
 })
 
-// Inject JWT token on every request
+// Send language preference to BE
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('brewnal_token')
-  if (token) config.headers.Authorization = `Bearer ${token}`
-
-  // Send language preference to BE
   const lang = localStorage.getItem('brewnal_lang') ?? 'id'
   config.headers['Accept-Language'] = lang
-
   return config
 })
 
@@ -22,7 +18,9 @@ api.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401) {
-      localStorage.removeItem('brewnal_token')
+      import('../store/auth.store').then(({ useAuthStore }) => {
+        useAuthStore.getState().logout()
+      })
       window.location.href = '/login'
     }
     return Promise.reject(err)

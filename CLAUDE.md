@@ -7,10 +7,11 @@ Specialty coffee brewing journal app.
 - FE: React + Vite + TypeScript (apps/web)
 - BE: Node.js + Fastify + TypeScript (apps/api)
 - ORM: Prisma
-- DB: PostgreSQL (Neon)
-- Storage: Supabase Storage
-- AI: Anthropic Claude API Vision
+- DB: PostgreSQL (VPS)
+- Storage: VPS
+- AI: Gemini
 - i18n: i18next (ID + EN)
+- prioritize security
 
 ## Current Phase
 

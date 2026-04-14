@@ -8,5 +8,7 @@ export const authService = {
   register: (data: { email: string; username: string; password: string; displayName?: string; brewerIdentity?: BrewerIdentity | null }) =>
     api.post<{ data: AuthResponse }>('/auth/register', data),
 
+  logout: () => api.post('/auth/logout'),
+
   me: () => api.get<{ data: User }>('/auth/me'),
 }

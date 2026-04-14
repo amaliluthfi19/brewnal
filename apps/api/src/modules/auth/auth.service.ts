@@ -56,3 +56,12 @@ export async function getUserById(id: string) {
     select: userSelect,
   })
 }
+
+export async function blacklistToken(token: string, expiresAt: Date) {
+  await prisma.tokenBlacklist.create({ data: { token, expiresAt } })
+}
+
+export async function isTokenBlacklisted(token: string): Promise<boolean> {
+  const entry = await prisma.tokenBlacklist.findUnique({ where: { token } })
+  return !!entry
+}

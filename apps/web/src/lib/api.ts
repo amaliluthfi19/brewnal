@@ -21,7 +21,10 @@ api.interceptors.response.use(
       import('../store/auth.store').then(({ useAuthStore }) => {
         useAuthStore.getState().logout()
       })
-      window.location.href = '/login'
+      const { pathname } = window.location
+      if (pathname !== '/login' && pathname !== '/register') {
+        window.location.href = '/login'
+      }
     }
     return Promise.reject(err)
   }

@@ -8,3 +8,12 @@ build/
 *.log
 .DS_Store
 coverage/
+
+# Docker
+.docker/
+docker-compose.override.yml
+# Exclude local database data/volumes (common patterns)
+**/pgdata/
+**/db-data/
+# Exclude local docker secrets
+**/db/password.txt

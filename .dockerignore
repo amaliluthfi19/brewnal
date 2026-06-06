@@ -1,0 +1,27 @@
+# Ignore node_modules everywhere – dependencies are installed inside the container
+**/node_modules
+
+# Build artifacts
+**/dist
+**/.next
+**/build
+
+# Git & IDE
+**/.git
+**/.vscode
+**/.vs
+**/.idea
+
+# Docker files (avoid recursive context)
+**/docker-compose*
+**/compose.y*ml
+
+# Env files
+**/.env
+
+# Misc
+**/.cache
+**/.turbo
+**/npm-debug.log
+**/README.md
+**/LICENSE

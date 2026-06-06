@@ -25,7 +25,7 @@ export default {
         border: 'var(--color-border)',
       },
       fontFamily: {
-        display: ['Fraunces', 'serif'],
+        display: ['Montserrat', 'serif'],
         sans: ['Plus Jakarta Sans', 'sans-serif'],
         mono: ['JetBrains Mono', 'monospace'],
       },

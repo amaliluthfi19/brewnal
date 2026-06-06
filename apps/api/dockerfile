@@ -1,0 +1,91 @@
+# syntax=docker/dockerfile:1
+
+ARG NODE_VERSION=20.20.0
+ARG PNPM_VERSION=10.31.0
+
+################################################################################
+# Base image with pnpm installed
+FROM node:${NODE_VERSION}-alpine AS base
+
+WORKDIR /usr/src/app
+
+ENV CI=true
+
+# Install pnpm globally
+RUN --mount=type=cache,target=/root/.npm \
+    npm install -g pnpm@${PNPM_VERSION}
+
+################################################################################
+# Install production dependencies
+FROM base AS deps
+
+WORKDIR /usr/src/app
+
+# Copy workspace root files so pnpm recognises the monorepo structure
+COPY package.json ./package.json
+COPY pnpm-workspace.yaml ./pnpm-workspace.yaml
+COPY pnpm-lock.yaml ./pnpm-lock.yaml
+
+# Copy package.json for every workspace package that the API depends on
+COPY apps/api/package.json ./apps/api/package.json
+COPY packages/types/package.json ./packages/types/package.json
+
+# Copy schema for prisma generate
+COPY apps/api/prisma/schema.prisma ./apps/api/prisma/schema.prisma
+
+# Install production-only deps for the api and its workspace dependencies
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
+    pnpm install --filter api... --prod --frozen-lockfile
+
+# Generate Prisma client for production (using explicit schema path to avoid loading ts config)
+RUN pnpm --filter api exec prisma generate --schema prisma/schema.prisma
+
+################################################################################
+# Build the application
+FROM deps AS build
+
+WORKDIR /usr/src/app
+
+# Install ALL deps (including devDependencies) for building
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
+    pnpm install --filter api... --frozen-lockfile
+
+# Copy the full source tree
+COPY . .
+
+# Build the API package
+RUN pnpm --filter api run build
+
+################################################################################
+# Production runtime
+FROM base AS final
+
+ENV NODE_ENV=production
+
+USER node
+
+WORKDIR /usr/src/app
+
+# Copy workspace root files for pnpm to resolve correctly at runtime
+COPY --chown=node:node package.json ./package.json
+COPY --chown=node:node pnpm-workspace.yaml ./pnpm-workspace.yaml
+COPY --chown=node:node pnpm-lock.yaml ./pnpm-lock.yaml
+COPY --chown=node:node apps/api/package.json ./apps/api/package.json
+COPY --chown=node:node packages/types/package.json ./packages/types/package.json
+COPY --chown=node:node packages/types/src ./packages/types/src
+
+# Copy installed production node_modules from the deps stage
+COPY --from=deps --chown=node:node /usr/src/app/node_modules ./node_modules
+COPY --from=deps --chown=node:node /usr/src/app/apps/api/node_modules ./apps/api/node_modules
+
+# Copy built output
+COPY --from=build --chown=node:node /usr/src/app/apps/api/dist ./apps/api/dist
+
+# Copy prisma schema and migrations for runtime migrations/deploy
+COPY --chown=node:node apps/api/prisma ./apps/api/prisma
+
+WORKDIR /usr/src/app/apps/api
+
+EXPOSE 3001
+
+CMD ["node", "dist/index.js"]

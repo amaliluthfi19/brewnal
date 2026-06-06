@@ -21,6 +21,7 @@ export async function registerUser(data: {
   password: string
   displayName?: string
   brewerIdentity?: BrewerIdentity | null
+  birthdate: Date
 }) {
   const passwordHash = await bcrypt.hash(data.password, 12)
   return prisma.user.create({
@@ -32,6 +33,7 @@ export async function registerUser(data: {
       brewerIdentity: data.brewerIdentity ?? undefined,
       identitySetAt: data.brewerIdentity ? new Date() : undefined,
       onboardingCompleted: !!data.brewerIdentity,
+      birthdate: data.birthdate,
     },
     select: userSelect,
   })

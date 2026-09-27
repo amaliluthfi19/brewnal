@@ -11,18 +11,26 @@ import { brewRoutes } from './modules/brew/brew.routes'
 import { aiRoutes } from './modules/ai/ai.routes'
 import { profileRoutes } from './modules/profile/profile.routes'
 
+// Never sign tokens with a guessable secret
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+  console.error('JWT_SECRET is missing or shorter than 32 characters. Set it in apps/api/.env')
+  process.exit(1)
+}
+
 const app = Fastify({ logger: { level: 'warn' } })
 
 // Plugins
 app.register(cors, {
   origin: process.env.CORS_ORIGIN ?? 'http://localhost:5173',
   credentials: true,
+  // @fastify/cors only allows GET, HEAD and POST by default
+  methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE'],
 })
 
 app.register(cookie)
 
 app.register(jwt, {
-  secret: process.env.JWT_SECRET ?? 'fallback-secret',
+  secret: process.env.JWT_SECRET,
   sign: { expiresIn: process.env.JWT_EXPIRES_IN ?? '7d' },
   cookie: { cookieName: 'token', signed: false },
 })

@@ -149,7 +149,7 @@ export function BeanDetailPage() {
                   {brew.tastingNotes.length > 0 && (
                     <div className="flex gap-1.5 mt-1">
                       {brew.tastingNotes.slice(0, 3).map((n) => (
-                        <span key={n} className="text-xs font-mono text-secondary">
+                        <span key={n} className="text-xs font-mono text-secondary-ink">
                           {n}
                         </span>
                       ))}

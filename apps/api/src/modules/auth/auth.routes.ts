@@ -11,21 +11,39 @@ const COOKIE_OPTS = {
   maxAge: 60 * 60 * 24 * 7, // 7 days
 }
 
+const PASSWORD_MIN = 8
+// bcrypt only uses the first 72 bytes
+const PASSWORD_MAX = 72
+
+// Accepts a calendar date as YYYY-MM-DD and returns it as UTC midnight,
+// or null if it's malformed, not a real date (e.g. 2001-02-30), in the future or before 1900.
+function parseBirthdate(value: unknown): Date | null {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null
+  const date = new Date(`${value}T00:00:00.000Z`)
+  if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== value) return null
+  if (date.getUTCFullYear() < 1900 || date.getTime() > Date.now()) return null
+  return date
+}
+
 export async function authRoutes(app: FastifyInstance) {
   // POST /auth/register
   app.post('/register', async (req, reply) => {
     const lang = getLang(req.headers['accept-language'])
-    const { email, username, password, displayName, brewerIdentity, birthdate } = req.body as {
-      email: string
-      username: string
-      password: string
-      displayName?: string
-      brewerIdentity?: string | null
-      birthdate: Date
+    const { email, username, password, displayName, birthdate: rawBirthdate } = (req.body ?? {}) as Record<string, unknown>
+
+    const birthdate = parseBirthdate(rawBirthdate)
+    if (
+      typeof email !== 'string' || !email ||
+      typeof username !== 'string' || !username ||
+      typeof password !== 'string' || password.length < PASSWORD_MIN || password.length > PASSWORD_MAX ||
+      (displayName !== undefined && typeof displayName !== 'string') ||
+      !birthdate
+    ) {
+      return reply.code(400).send({ error: t('error.validation', lang), statusCode: 400 })
     }
 
     try {
-      const user = await registerUser({ email, username, password, displayName, brewerIdentity: brewerIdentity as any, birthdate })
+      const user = await registerUser({ email, username, password, displayName, birthdate })
       const token = app.jwt.sign({ id: user.id, email: user.email })
       reply.setCookie('token', token, COOKIE_OPTS)
       return reply.code(201).send({
@@ -37,6 +55,7 @@ export async function authRoutes(app: FastifyInstance) {
         const field = err.meta?.target?.includes('email') ? 'auth.email_taken' : 'auth.username_taken'
         return reply.code(409).send({ error: t(field, lang), statusCode: 409 })
       }
+      req.log.error(err, 'register failed')
       return reply.code(500).send({ error: t('error.server', lang), statusCode: 500 })
     }
   })

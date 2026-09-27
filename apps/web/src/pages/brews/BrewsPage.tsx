@@ -98,7 +98,7 @@ function BrewRow({
             {brew.tastingNotes.slice(0, 4).map((n) => (
               <span
                 key={n}
-                className="text-xs font-mono text-secondary bg-secondary/10 px-1.5 py-0.5 rounded"
+                className="text-xs font-mono text-secondary-ink bg-secondary/10 px-1.5 py-0.5 rounded"
               >
                 {n}
               </span>

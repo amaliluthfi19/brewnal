@@ -14,6 +14,7 @@ export default {
         },
         secondary: {
           DEFAULT: 'rgb(var(--color-secondary-ch) / <alpha-value>)',
+          ink: 'var(--color-secondary-ink)',
         },
         pop: 'var(--color-pop)',
         ink: 'var(--color-ink)',
@@ -25,9 +26,17 @@ export default {
         border: 'var(--color-border)',
       },
       fontFamily: {
-        display: ['Montserrat', 'serif'],
-        sans: ['Plus Jakarta Sans', 'sans-serif'],
-        mono: ['JetBrains Mono', 'monospace'],
+        display: ['Montserrat Variable', 'Montserrat', 'sans-serif'],
+        sans: ['Varta', 'sans-serif'],
+        mono: ['JetBrains Mono Variable', 'JetBrains Mono', 'monospace'],
+      },
+      borderRadius: {
+        xl: '0.875rem', // cards (design system: 14px)
+      },
+      boxShadow: {
+        sm: 'var(--shadow-sm)',
+        md: 'var(--shadow-md)',
+        lg: 'var(--shadow-lg)',
       },
     },
   },

@@ -1,9 +1,15 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { ArrowRight, CircleAlert } from 'lucide-react'
 import { authService } from '../../services/auth.service'
 import { useAuthStore } from '../../store/auth.store'
-import { LanguageToggle } from '../../components/ui/LanguageToggle'
+import { AuthLayout } from '../../components/layout/AuthLayout'
+import { PasswordInput } from '../../components/ui/PasswordInput'
+import loginIllustration from '../../assets/illustrations/coffee-tea.svg'
+
+const inputClass =
+  'w-full px-3 py-2.5 rounded-lg border border-border bg-surface text-ink placeholder:text-muted text-sm focus:outline-none focus:border-primary transition-colors'
 
 export function LoginPage() {
   const { t } = useTranslation(['auth', 'common'])
@@ -24,75 +30,77 @@ export function LoginPage() {
       setAuth(res.data.data.user)
       navigate('/')
     } catch (err: any) {
-      console.error('Login error:', err)
-      setError(err.response?.data?.error ?? err.message ?? 'Login failed')
+      setError(err.response?.data?.error ?? t('auth:loginFailed'))
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-bg flex items-center justify-center p-4">
-      <div className="absolute top-4 right-4">
-        <LanguageToggle />
-      </div>
+    <AuthLayout
+      illustration={loginIllustration}
+      illustrationAlt={t('auth:illustration.login')}
+      title={t('auth:loginTitle')}
+      subtitle={t('auth:loginSubtitle')}
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {error && (
+          <p
+            role="alert"
+            className="flex items-start gap-2 text-sm text-danger bg-danger/10 border border-danger/20 rounded-lg px-3 py-2"
+          >
+            <CircleAlert size={16} aria-hidden="true" className="mt-0.5 shrink-0" />
+            {error}
+          </p>
+        )}
 
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <h1 className="font-display text-5xl font-black text-ink mb-2">brewnal</h1>
-          <p className="text-muted text-sm">{t('auth:loginTitle')}</p>
+        <div className="space-y-1.5">
+          <label htmlFor="login-email" className="text-sm font-medium text-ink">
+            {t('auth:email')}
+          </label>
+          <input
+            id="login-email"
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className={inputClass}
+            placeholder={t('auth:emailPlaceholder')}
+          />
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="bg-surface border border-border rounded-2xl p-6 space-y-4"
+        <div className="space-y-1.5">
+          <label htmlFor="login-password" className="text-sm font-medium text-ink">
+            {t('auth:password')}
+          </label>
+          <PasswordInput
+            id="login-password"
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className={inputClass}
+            placeholder="••••••••"
+          />
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-primary text-white font-medium text-sm hover:bg-primary-hover disabled:opacity-50 transition-colors"
         >
-          {error && (
-            <p className="text-sm text-danger bg-danger/10 border border-danger/20 rounded-lg px-3 py-2">
-              {error}
-            </p>
-          )}
+          {loading ? t('common:loading') : t('auth:login')}
+          {!loading && <ArrowRight size={16} aria-hidden="true" />}
+        </button>
+      </form>
 
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-ink">{t('auth:email')}</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full px-3 py-2 rounded-lg border border-border bg-bg text-ink placeholder:text-muted text-sm focus:outline-none focus:border-primary transition-colors"
-              placeholder="kamu@email.com"
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-ink">{t('auth:password')}</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full px-3 py-2 rounded-lg border border-border bg-bg text-ink placeholder:text-muted text-sm focus:outline-none focus:border-primary transition-colors"
-              placeholder="••••••••"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-2.5 rounded-lg bg-primary text-white font-medium text-sm hover:bg-primary-hover disabled:opacity-50 transition-colors"
-          >
-            {loading ? t('common:loading') : t('auth:login')}
-          </button>
-        </form>
-
-        <p className="text-center text-sm text-muted mt-4">
-          {t('auth:noAccount')}{' '}
-          <Link to="/register" className="text-primary font-medium hover:underline">
-            {t('auth:register')}
-          </Link>
-        </p>
-      </div>
-    </div>
+      <p className="text-center lg:text-left text-sm text-muted mt-6">
+        {t('auth:noAccount')}{' '}
+        <Link to="/register" className="text-primary font-medium hover:underline">
+          {t('auth:register')}
+        </Link>
+      </p>
+    </AuthLayout>
   )
 }

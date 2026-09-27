@@ -163,7 +163,7 @@ export function BeanFormPage() {
             type="button"
             disabled={scanning}
             onClick={() => fileRef.current?.click()}
-            className="px-4 py-2 rounded-lg bg-secondary text-white text-sm font-medium disabled:opacity-50 hover:opacity-90 transition-opacity"
+            className="px-4 py-2 rounded-lg bg-secondary/15 text-ink text-sm font-medium disabled:opacity-50 hover:bg-secondary/25 transition-colors"
           >
             {scanning ? t('beans:scanning') : `📷 ${t('beans:scan')}`}
           </button>

@@ -84,8 +84,11 @@ COPY --from=build --chown=node:node /usr/src/app/apps/api/dist ./apps/api/dist
 # Copy prisma schema and migrations for runtime migrations/deploy
 COPY --chown=node:node apps/api/prisma ./apps/api/prisma
 
+# Copy entrypoint script
+COPY --chown=node:node apps/api/docker-entrypoint.sh ./apps/api/docker-entrypoint.sh
+
 WORKDIR /usr/src/app/apps/api
 
 EXPOSE 3001
 
-CMD ["node", "dist/index.js"]
+ENTRYPOINT ["sh", "docker-entrypoint.sh"]

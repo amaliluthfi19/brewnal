@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import { Coffee, Star } from 'lucide-react'
 import { brewsService } from '../../services/brews.service'
 import { beansService } from '../../services/beans.service'
 import type { BrewJournal } from '@brewnal/types'
@@ -42,6 +43,7 @@ export function BrewsPage() {
         <p className="text-muted text-center py-8">{t('common:loading')}</p>
       ) : brews.length === 0 ? (
         <div className="text-center py-12 bg-surface border border-border rounded-xl">
+          <Coffee size={32} className="mx-auto mb-3 text-muted" aria-hidden />
           <p className="text-muted">{t('brew:emptyState')}</p>
           <Link to="/brews/new" className="mt-3 inline-block text-primary font-medium hover:underline">
             {t('brew:add')}
@@ -76,13 +78,16 @@ function BrewRow({
   beanLabel: string
   onDelete: () => void
 }) {
-  const { t } = useTranslation('common')
+  const { t } = useTranslation(['common', 'brew'])
 
   return (
     <div className="bg-surface border border-border rounded-xl p-4 flex items-start justify-between gap-3 hover:border-primary transition-colors">
       <Link to={`/brews/${brew.id}`} className="flex-1 min-w-0">
         <div className="text-xs text-muted font-mono truncate">{beanLabel}</div>
-        <div className="font-medium text-ink">{brew.brewMethod}</div>
+        <div className="font-medium text-ink">
+          {t(`brew:wizard.drinks.${brew.drinkType}`, brew.drinkType)}
+          {brew.equipment ? <span className="text-muted font-normal"> · {brew.equipment}</span> : null}
+        </div>
         <div className="text-xs text-muted mt-0.5">
           {[
             brew.doseGrams ? `${brew.doseGrams}g` : null,
@@ -109,20 +114,23 @@ function BrewRow({
 
       <div className="flex flex-col items-end gap-2 shrink-0">
         {brew.rating && (
-          <span className="text-pop font-mono font-bold text-sm">★ {brew.rating}</span>
+          <span className="flex items-center gap-1 font-mono font-bold text-sm text-ink">
+            <Star size={14} aria-hidden className="text-pop fill-pop" />
+            {brew.rating}/5
+          </span>
         )}
         <div className="flex gap-3">
           <Link
             to={`/brews/${brew.id}/edit`}
             className="text-xs text-muted hover:text-ink transition-colors"
           >
-            {t('edit')}
+            {t('common:edit')}
           </Link>
           <button
             onClick={onDelete}
             className="text-xs text-muted hover:text-danger transition-colors"
           >
-            {t('delete')}
+            {t('common:delete')}
           </button>
         </div>
       </div>

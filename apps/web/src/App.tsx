@@ -13,7 +13,7 @@ import { BeanDetailPage } from './pages/beans/BeanDetailPage'
 import { BeanFormPage } from './pages/beans/BeanFormPage'
 import { BrewsPage } from './pages/brews/BrewsPage'
 import { BrewDetailPage } from './pages/brews/BrewDetailPage'
-import { BrewFormPage } from './pages/brews/BrewFormPage'
+import { BrewWizardPage } from './pages/brews/wizard/BrewWizardPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -57,9 +57,9 @@ export default function App() {
             <Route path="/beans/:id" element={<BeanDetailPage />} />
             <Route path="/beans/:id/edit" element={<BeanFormPage />} />
             <Route path="/brews" element={<BrewsPage />} />
-            <Route path="/brews/new" element={<BrewFormPage />} />
+            <Route path="/brews/new" element={<BrewWizardPage />} />
             <Route path="/brews/:id" element={<BrewDetailPage />} />
-            <Route path="/brews/:id/edit" element={<BrewFormPage />} />
+            <Route path="/brews/:id/edit" element={<BrewWizardPage />} />
           </Route>
 
           {/* Fallback */}

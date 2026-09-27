@@ -1,4 +1,6 @@
 import { useState, KeyboardEvent } from 'react'
+import { X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 interface TastingNoteInputProps {
   value: string[]
@@ -7,6 +9,7 @@ interface TastingNoteInputProps {
 }
 
 export function TastingNoteInput({ value, onChange, placeholder = 'Add note...' }: TastingNoteInputProps) {
+  const { t } = useTranslation('common')
   const [input, setInput] = useState('')
 
   const addNote = () => {
@@ -38,9 +41,10 @@ export function TastingNoteInput({ value, onChange, placeholder = 'Add note...' 
           <button
             type="button"
             onClick={() => onChange(value.filter((n) => n !== note))}
-            className="text-muted hover:text-danger leading-none"
+            aria-label={`${t('delete')} ${note}`}
+            className="text-muted hover:text-danger transition-colors"
           >
-            ×
+            <X size={12} aria-hidden />
           </button>
         </span>
       ))}

@@ -10,6 +10,13 @@
   --color-primary-ch:    13 49 157;   /* #0D319D navy */
   --color-secondary-ch:  254 120 47;  /* #FE782F orange — fills/tints only */
   --color-danger-ch:     239 35 60;   /* #EF233C */
+  --color-pop-ch:        255 190 11;  /* #FFBE0B */
+  --color-bg-ch:         244 244 244; /* #F4F4F4 */
+
+  /* Page-glow strengths (app background gradient) */
+  --glow-primary:   0.55;
+  --glow-pop:       0.45;
+  --glow-secondary: 0.55;
 
   /* Solid tokens */
   --color-bg:             #F4F4F4;
@@ -32,6 +39,12 @@
   --color-primary-ch:    58 111 232;  /* #3A6FE8 */
   --color-secondary-ch:  255 127 80;  /* #FF7F50 */
   --color-danger-ch:     255 77 109;  /* #FF4D6D */
+  --color-pop-ch:        255 210 63;  /* #FFD23F */
+  --color-bg-ch:         26 16 53;    /* #1A1035 */
+
+  --glow-primary:   0.45;
+  --glow-pop:       0.16;
+  --glow-secondary: 0.28;
 
   --color-bg:             #1A1035;
   --color-surface:        #261848;
@@ -52,14 +65,23 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Auth background: white-dominant with soft primary/secondary glows.
+/* App background: soft navy / yellow / orange glows bleeding in from the top,
+   fading into `bg`. Painted on a fixed layer so it stays put while content
+   scrolls (avoids background-attachment: fixed, which is broken on iOS).
    Built from token channels so it follows dark mode automatically. */
-.bg-auth-gradient {
-  background-color: var(--color-surface);
+.bg-app-gradient {
+  position: relative;
+  isolation: isolate;
+  background-color: var(--color-bg);
+}
+.bg-app-gradient::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
   background-image:
-    radial-gradient(60rem 40rem at 0% 0%, rgb(var(--color-primary-ch) / 0.14), transparent 60%),
-    radial-gradient(50rem 36rem at 100% 100%, rgb(var(--color-secondary-ch) / 0.16), transparent 60%),
-    radial-gradient(36rem 28rem at 85% 10%, rgb(var(--color-secondary-ch) / 0.07), transparent 65%),
-    radial-gradient(32rem 24rem at 10% 95%, rgb(var(--color-primary-ch) / 0.06), transparent 65%);
-  background-attachment: fixed;
+    radial-gradient(ellipse 55% 32% at 16% 6%,  rgb(var(--color-primary-ch)   / var(--glow-primary)),   transparent 100%),
+    radial-gradient(ellipse 40% 16% at 58% -2%, rgb(var(--color-pop-ch)       / var(--glow-pop)),       transparent 100%),
+    radial-gradient(ellipse 50% 40% at 100% 14%, rgb(var(--color-secondary-ch) / var(--glow-secondary)), transparent 100%);
 }

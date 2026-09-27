@@ -49,11 +49,13 @@ model BrewJournal {
   id              String   @id @default(cuid())
   userId          String
   beanId          String
-  brewMethod      String
+  drinkType       String
+  equipment       String?
   grinder         String?
   grindSize       String?
   doseGrams       Float?
   waterMl         Float?
+  yieldGrams      Float?
   ratio           String?
   waterTempC      Int?
   brewTimeSec     Int?

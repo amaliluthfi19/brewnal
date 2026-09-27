@@ -2,8 +2,9 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import { ArrowRight, Bean } from 'lucide-react'
 import { beansService } from '../../services/beans.service'
-import type { Bean } from '@brewnal/types'
+import { BeanCard } from '../../components/beans/BeanCard'
 
 export function BeansPage() {
   const { t } = useTranslation(['beans', 'common'])
@@ -48,6 +49,7 @@ export function BeansPage() {
         <p className="text-muted text-center py-8">{t('common:loading')}</p>
       ) : beans.length === 0 ? (
         <div className="text-center py-12 bg-surface border border-border rounded-xl">
+          <Bean size={32} className="mx-auto mb-3 text-muted" aria-hidden />
           <p className="text-muted">{t('beans:emptyState')}</p>
           <Link to="/beans/new" className="mt-3 inline-block text-primary font-medium hover:underline">
             {t('beans:add')}
@@ -59,64 +61,33 @@ export function BeansPage() {
             <BeanCard
               key={bean.id}
               bean={bean}
-              onDelete={() => deleteMutation.mutate(bean.id)}
+              actions={
+                <>
+                  <Link
+                    to={`/beans/${bean.id}`}
+                    className="flex-1 text-center text-xs font-medium text-ink hover:text-primary transition-colors"
+                  >
+                    Detail
+                  </Link>
+                  <Link
+                    to={`/brews/new?beanId=${bean.id}`}
+                    className="flex-1 inline-flex items-center justify-center gap-1 text-xs font-medium text-primary hover:underline"
+                  >
+                    Brew
+                    <ArrowRight size={12} aria-hidden />
+                  </Link>
+                  <button
+                    onClick={() => deleteMutation.mutate(bean.id)}
+                    className="flex-1 text-center text-xs font-medium text-muted hover:text-danger transition-colors"
+                  >
+                    {t('common:delete')}
+                  </button>
+                </>
+              }
             />
           ))}
         </div>
       )}
-    </div>
-  )
-}
-
-function BeanCard({ bean, onDelete }: { bean: Bean; onDelete: () => void }) {
-  const { t } = useTranslation(['common'])
-
-  return (
-    <div className="bg-surface border border-border rounded-xl p-4 flex flex-col gap-2 hover:border-primary transition-colors">
-      <div>
-        <div className="text-xs text-muted font-mono">{bean.roastery}</div>
-        <div className="font-bold text-ink">{bean.beanName}</div>
-      </div>
-
-      <div className="flex flex-wrap gap-1.5">
-        {bean.originCountry && (
-          <span className="px-2 py-0.5 rounded-full bg-bg border border-border text-muted text-xs">
-            {bean.originCountry}
-            {bean.originRegion ? ` · ${bean.originRegion}` : ''}
-          </span>
-        )}
-        {bean.process && (
-          <span className="px-2 py-0.5 rounded-full bg-secondary/20 text-ink text-xs">
-            {bean.process}
-          </span>
-        )}
-        {bean.roastLevel && (
-          <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs">
-            {bean.roastLevel}
-          </span>
-        )}
-      </div>
-
-      <div className="flex items-center gap-2 mt-auto pt-2 border-t border-border">
-        <Link
-          to={`/beans/${bean.id}`}
-          className="flex-1 text-center text-xs font-medium text-ink hover:text-primary transition-colors"
-        >
-          Detail
-        </Link>
-        <Link
-          to={`/brews/new?beanId=${bean.id}`}
-          className="flex-1 text-center text-xs font-medium text-primary hover:underline"
-        >
-          Brew →
-        </Link>
-        <button
-          onClick={onDelete}
-          className="flex-1 text-center text-xs font-medium text-muted hover:text-danger transition-colors"
-        >
-          {t('common:delete')}
-        </button>
-      </div>
     </div>
   )
 }

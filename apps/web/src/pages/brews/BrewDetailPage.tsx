@@ -1,6 +1,7 @@
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import { Star } from 'lucide-react'
 import { brewsService } from '../../services/brews.service'
 import { beansService } from '../../services/beans.service'
 
@@ -37,10 +38,12 @@ export function BrewDetailPage() {
   const bean = beanRes?.data.data
 
   const params = [
+    { label: t('brew:equipment'), value: brew.equipment },
     { label: t('brew:grinder'), value: brew.grinder },
     { label: t('brew:grindSize'), value: brew.grindSize },
     { label: t('brew:dose'), value: brew.doseGrams ? `${brew.doseGrams}g` : undefined },
     { label: t('brew:water'), value: brew.waterMl ? `${brew.waterMl}ml` : undefined },
+    { label: t('brew:yield'), value: brew.yieldGrams ? `${brew.yieldGrams}g` : undefined },
     { label: t('brew:ratio'), value: brew.ratio },
     { label: t('brew:temp'), value: brew.waterTempC ? `${brew.waterTempC}°C` : undefined },
     { label: t('brew:brewTime'), value: brew.brewTimeSec ? `${brew.brewTimeSec}s` : undefined },
@@ -60,7 +63,9 @@ export function BrewDetailPage() {
               {bean.roastery} — {bean.beanName}
             </Link>
           )}
-          <h1 className="font-display text-2xl font-black text-ink">{brew.brewMethod}</h1>
+          <h1 className="font-display text-2xl font-black text-ink">
+            {t(`brew:wizard.drinks.${brew.drinkType}`, brew.drinkType)}
+          </h1>
           <p className="text-xs text-muted">{new Date(brew.createdAt).toLocaleString()}</p>
         </div>
         <div className="flex gap-2 shrink-0">
@@ -112,7 +117,10 @@ export function BrewDetailPage() {
         {brew.rating && (
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted">{t('brew:rating')}</span>
-            <span className="text-pop font-mono font-bold text-xl">★ {brew.rating}/10</span>
+            <span className="flex items-center gap-1 font-mono font-bold text-xl text-ink">
+              <Star size={20} aria-hidden className="text-pop fill-pop" />
+              {brew.rating}/5
+            </span>
           </div>
         )}
 

@@ -1,6 +1,7 @@
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import { Star } from 'lucide-react'
 import { beansService } from '../../services/beans.service'
 import { brewsService } from '../../services/brews.service'
 
@@ -139,7 +140,7 @@ export function BeanDetailPage() {
                 className="flex items-center justify-between p-3 rounded-xl bg-surface border border-border hover:border-primary transition-colors"
               >
                 <div>
-                  <div className="text-sm font-medium text-ink">{brew.brewMethod}</div>
+                  <div className="text-sm font-medium text-ink">{t(`brew:wizard.drinks.${brew.drinkType}`, brew.drinkType)}</div>
                   <div className="text-xs text-muted">
                     {[brew.doseGrams ? `${brew.doseGrams}g` : null, brew.waterMl ? `${brew.waterMl}ml` : null]
                       .filter(Boolean)
@@ -157,7 +158,10 @@ export function BeanDetailPage() {
                   )}
                 </div>
                 {brew.rating && (
-                  <span className="text-pop font-mono font-bold shrink-0">★ {brew.rating}</span>
+                  <span className="flex items-center gap-1 font-mono font-bold text-ink shrink-0">
+                    <Star size={16} aria-hidden className="text-pop fill-pop" />
+                    {brew.rating}/5
+                  </span>
                 )}
               </Link>
             ))}

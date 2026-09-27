@@ -14,7 +14,7 @@ export function AuthLayout({ illustration, illustrationAlt, title, subtitle, chi
   const { t } = useTranslation('auth')
 
   return (
-    <div className="min-h-screen bg-auth-gradient lg:grid lg:grid-cols-2">
+    <div className="min-h-screen bg-app-gradient lg:grid lg:grid-cols-2">
       {/* Brand panel — desktop only */}
       <aside className="hidden lg:flex flex-col justify-between p-12">
         <span className="font-display text-3xl font-black text-primary">brewnal</span>

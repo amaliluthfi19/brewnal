@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import { ArrowLeft, Camera } from 'lucide-react'
 import { beansService } from '../../services/beans.service'
 import { SensoryInput } from '../../components/ui/SensoryInput'
 import type { CreateBeanDto, ScanResult, ProcessMethod, RoastLevel } from '@brewnal/types'
@@ -32,6 +33,9 @@ function FormField({
   )
 }
 
+// Where "Add bean" may send the user back to. Allowlisted so ?returnTo can't be an open redirect.
+const RETURN_TARGETS = ['/brews/new'] as const
+
 const empty = (): CreateBeanDto => ({
   roastery: '',
   beanName: '',
@@ -41,6 +45,8 @@ const empty = (): CreateBeanDto => ({
 export function BeanFormPage() {
   const { id } = useParams<{ id: string }>()
   const isEdit = !!id
+  const [searchParams] = useSearchParams()
+  const returnTo = RETURN_TARGETS.find((p) => p === searchParams.get('returnTo'))
   const { t } = useTranslation(['beans', 'common', 'sensory'])
   const navigate = useNavigate()
   const qc = useQueryClient()
@@ -80,8 +86,14 @@ export function BeanFormPage() {
   const saveMutation = useMutation({
     mutationFn: (data: CreateBeanDto) =>
       isEdit ? beansService.update(id!, data) : beansService.create(data),
-    onSuccess: () => {
+    onSuccess: (res) => {
       qc.invalidateQueries({ queryKey: ['beans'] })
+      const created = !isEdit && 'data' in res.data ? res.data.data : undefined
+      if (returnTo && created) {
+        // Back into the brew wizard with the new bean already picked
+        navigate(`${returnTo}?beanId=${encodeURIComponent(created.id)}&step=1`, { replace: true })
+        return
+      }
       navigate(isEdit ? `/beans/${id}` : '/beans')
     },
     onError: (err: any) => setError(err.response?.data?.error ?? 'Gagal menyimpan'),
@@ -139,8 +151,13 @@ export function BeanFormPage() {
   return (
     <div className="max-w-lg mx-auto space-y-5">
       <div className="flex items-center gap-3">
-        <button onClick={() => navigate(-1)} className="text-muted hover:text-ink text-lg">
-          ←
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          aria-label={t('common:back')}
+          className="text-muted hover:text-ink transition-colors"
+        >
+          <ArrowLeft size={20} aria-hidden />
         </button>
         <h1 className="font-display text-2xl font-black text-ink">
           {isEdit ? t('common:edit') : t('beans:add')}
@@ -163,9 +180,10 @@ export function BeanFormPage() {
             type="button"
             disabled={scanning}
             onClick={() => fileRef.current?.click()}
-            className="px-4 py-2 rounded-lg bg-secondary/15 text-ink text-sm font-medium disabled:opacity-50 hover:bg-secondary/25 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary/15 text-ink text-sm font-medium disabled:opacity-50 hover:bg-secondary/25 transition-colors"
           >
-            {scanning ? t('beans:scanning') : `📷 ${t('beans:scan')}`}
+            {!scanning && <Camera size={16} aria-hidden />}
+            {scanning ? t('beans:scanning') : t('beans:scan')}
           </button>
           {scanError && <p className="text-xs text-danger mt-2">{scanError}</p>}
         </div>

@@ -5,7 +5,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        bg: 'var(--color-bg)',
+        bg: 'rgb(var(--color-bg-ch) / <alpha-value>)',
         surface: 'var(--color-surface)',
         'surface-raised': 'var(--color-surface-raised)',
         primary: {
@@ -16,7 +16,7 @@ export default {
           DEFAULT: 'rgb(var(--color-secondary-ch) / <alpha-value>)',
           ink: 'var(--color-secondary-ink)',
         },
-        pop: 'var(--color-pop)',
+        pop: 'rgb(var(--color-pop-ch) / <alpha-value>)',
         ink: 'var(--color-ink)',
         muted: 'var(--color-muted)',
         success: 'var(--color-success)',

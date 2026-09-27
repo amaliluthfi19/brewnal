@@ -1,16 +1,18 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { Bean, Coffee, Plus, Star } from 'lucide-react'
 import { beansService } from '../../services/beans.service'
 import { brewsService } from '../../services/brews.service'
 import { useAuthStore } from '../../store/auth.store'
+import coffeeIllustration from '../../assets/illustrations/coffee-tea.svg'
 
 export function DashboardPage() {
-  const { t } = useTranslation(['dashboard', 'brew', 'common'])
+  const { t, i18n } = useTranslation(['dashboard', 'brew', 'beans', 'common'])
   const user = useAuthStore((s) => s.user)
 
   const { data: beansRes } = useQuery({ queryKey: ['beans'], queryFn: beansService.getAll })
-  const { data: brewsRes } = useQuery({ queryKey: ['brews'], queryFn: () => brewsService.getAll()})
+  const { data: brewsRes } = useQuery({ queryKey: ['brews'], queryFn: () => brewsService.getAll() })
 
   const beans = beansRes?.data.data ?? []
   const brews = brewsRes?.data.data ?? []
@@ -29,75 +31,122 @@ export function DashboardPage() {
   const favoriteBeans = beans
     .filter((b) => brewCountByBean[b.id])
     .sort((a, b) => (brewCountByBean[b.id] ?? 0) - (brewCountByBean[a.id] ?? 0))
-    .slice(0, 3)
+    .slice(0, 4)
 
   const recentBrews = [...brews]
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 5)
 
   const beanMap = Object.fromEntries(beans.map((b) => [b.id, b]))
+  const dateFmt = new Intl.DateTimeFormat(i18n.language, { day: 'numeric', month: 'short' })
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-md space-y-8">
       {/* Greeting */}
       <div>
-        <h1 className="font-display text-3xl font-black text-ink">
-          {user?.displayName ?? user?.username} ☕
+        <h1 className="font-display text-3xl font-black text-ink truncate">
+          {t('dashboard:greeting', { name: user?.displayName ?? user?.username ?? '' })}
         </h1>
-        <p className="text-muted text-sm mt-0.5">{t('dashboard:title')}</p>
+        <p className="text-muted text-sm mt-1">{t('dashboard:subtitle')}</p>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-3">
-        {[
-          { label: t('dashboard:totalBeans'), value: beans.length },
-          { label: t('dashboard:totalBrews'), value: brews.length },
-          { label: t('dashboard:avgRating'), value: avgRating },
-        ].map(({ label, value }) => (
-          <div key={label} className="bg-surface border border-border rounded-xl p-4 text-center">
-            <div className="font-display text-3xl font-black text-primary">{value}</div>
-            <div className="text-xs text-muted mt-1">{label}</div>
+      {/* Overview */}
+      <section className="space-y-3">
+        <h2 className="font-display text-xl font-black text-ink">{t('dashboard:overview')}</h2>
+
+        <div className="bg-surface border border-border rounded-xl overflow-hidden">
+          <div className="p-4">
+            <div className="text-sm font-bold text-ink">{t('brew:title')}</div>
+            <div className="mt-3 flex items-end justify-between gap-4">
+              <div>
+                <div className="font-display text-4xl font-black text-primary leading-none">
+                  {brews.length}
+                </div>
+                <div className="text-xs text-muted mt-1">{t('dashboard:totalBrews')}</div>
+              </div>
+              <div className="flex gap-5 text-right">
+                <div>
+                  <div className="font-mono text-lg font-bold text-ink">{beans.length}</div>
+                  <div className="text-xs text-muted">{t('dashboard:totalBeans')}</div>
+                </div>
+                <div>
+                  <div className="font-mono text-lg font-bold text-ink flex items-center justify-end gap-1">
+                    <Star size={16} aria-hidden className="text-pop fill-pop" />
+                    {avgRating}
+                  </div>
+                  <div className="text-xs text-muted">{t('dashboard:avgRating')}</div>
+                </div>
+              </div>
+            </div>
           </div>
-        ))}
-      </div>
+
+          <div className="grid grid-cols-2 border-t border-border divide-x divide-border">
+            <Link
+              to="/brews/new"
+              className="py-3 text-center text-sm font-bold text-primary hover:bg-primary/5 transition-colors"
+            >
+              {t('brew:add')}
+            </Link>
+            <Link
+              to="/beans/new"
+              className="py-3 text-center text-sm font-bold text-primary hover:bg-primary/5 transition-colors"
+            >
+              {t('beans:add')}
+            </Link>
+          </div>
+        </div>
+      </section>
 
       {/* Recent brews */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-sans font-bold text-ink">{t('dashboard:recentBrews')}</h2>
-          <Link to="/brews/new" className="text-sm text-primary hover:underline">
-            + {t('brew:add')}
-          </Link>
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-xl font-black text-ink">{t('dashboard:recentBrews')}</h2>
+          {recentBrews.length > 0 && (
+            <Link to="/brews" className="text-sm font-medium text-primary hover:underline">
+              {t('dashboard:seeAll')}
+            </Link>
+          )}
         </div>
 
         {recentBrews.length === 0 ? (
-          <div className="text-center py-10 bg-surface border border-border rounded-xl">
-            <p className="text-muted text-sm">{t('brew:emptyState')}</p>
-            <Link to="/brews/new" className="mt-2 inline-block text-sm text-primary hover:underline">
+          <div className="flex flex-col items-center text-center px-6 py-8 bg-surface border border-border rounded-xl">
+            <img src={coffeeIllustration} alt={t('dashboard:emptyIllustration')} className="w-40 max-w-full" />
+            <p className="text-muted text-sm mt-4">{t('dashboard:noBrews')}</p>
+            <Link
+              to="/brews/new"
+              className="mt-4 inline-flex items-center gap-1.5 bg-primary text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary-hover transition-colors"
+            >
+              <Plus size={16} aria-hidden />
               {t('brew:add')}
             </Link>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="bg-surface border border-border rounded-xl divide-y divide-border overflow-hidden">
             {recentBrews.map((brew) => {
               const bean = beanMap[brew.beanId]
               return (
                 <Link
                   key={brew.id}
                   to={`/brews/${brew.id}`}
-                  className="flex items-center justify-between p-3 rounded-xl bg-surface border border-border hover:border-primary transition-colors"
+                  className="flex items-center gap-3 p-4 hover:bg-primary/5 transition-colors"
                 >
-                  <div className="min-w-0">
-                    <div className="text-sm font-medium text-ink truncate">
-                      {bean ? `${bean.roastery} — ${bean.beanName}` : '—'}
+                  <div className="h-10 w-10 shrink-0 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                    <Coffee size={20} aria-hidden />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-bold text-ink truncate">
+                      {bean ? bean.beanName : '—'}
                     </div>
-                    <div className="text-xs text-muted">
-                      {brew.brewMethod} · {new Date(brew.createdAt).toLocaleDateString()}
+                    <div className="text-xs text-muted truncate">
+                      {bean ? `${bean.roastery} · ` : ''}
+                      {t(`brew:wizard.drinks.${brew.drinkType}`, brew.drinkType)} ·{' '}
+                      {dateFmt.format(new Date(brew.createdAt))}
                     </div>
                   </div>
-                  {brew.rating && (
-                    <span className="text-pop font-mono text-sm font-bold shrink-0 ml-3">
-                      ★ {brew.rating}
+                  {brew.rating != null && (
+                    <span className="flex items-center gap-1 font-mono text-sm font-bold text-ink shrink-0">
+                      <Star size={14} aria-hidden className="text-pop fill-pop" />
+                      {brew.rating}
                     </span>
                   )}
                 </Link>
@@ -105,25 +154,31 @@ export function DashboardPage() {
             })}
           </div>
         )}
-      </div>
+      </section>
 
       {/* Favorite beans */}
       {favoriteBeans.length > 0 && (
-        <div>
-          <h2 className="font-sans font-bold text-ink mb-3">{t('dashboard:favoriteBeans')}</h2>
-          <div className="flex gap-2 flex-wrap">
+        <section className="space-y-3">
+          <h2 className="font-display text-xl font-black text-ink">{t('dashboard:favoriteBeans')}</h2>
+          <div className="grid grid-cols-2 gap-3">
             {favoriteBeans.map((bean) => (
               <Link
                 key={bean.id}
                 to={`/beans/${bean.id}`}
-                className="px-3 py-1.5 rounded-full bg-secondary/20 text-ink text-sm font-medium hover:bg-secondary/30 transition-colors"
+                className="flex flex-col bg-surface border border-border rounded-xl p-4 hover:border-primary transition-colors"
               >
-                {bean.roastery} · {bean.beanName}
-                <span className="ml-1.5 text-xs text-muted">×{brewCountByBean[bean.id]}</span>
+                <div className="h-11 w-11 rounded-full bg-secondary/15 text-secondary-ink flex items-center justify-center">
+                  <Bean size={20} aria-hidden />
+                </div>
+                <div className="mt-4 text-sm text-muted truncate">{bean.roastery}</div>
+                <div className="font-bold text-ink line-clamp-2">{bean.beanName}</div>
+                <div className="mt-auto pt-3 font-mono text-xs text-muted">
+                  {t('dashboard:brewCount', { count: brewCountByBean[bean.id] })}
+                </div>
               </Link>
             ))}
           </div>
-        </div>
+        </section>
       )}
     </div>
   )

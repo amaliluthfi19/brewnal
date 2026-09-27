@@ -1,3 +1,4 @@
+import { Languages } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 export function LanguageToggle() {
@@ -15,7 +16,7 @@ export function LanguageToggle() {
                  bg-surface border border-border hover:border-primary transition-colors"
       title={isID ? 'Switch to English' : 'Ganti ke Bahasa Indonesia'}
     >
-      <span>{isID ? '🇮🇩' : '🇬🇧'}</span>
+      <Languages size={16} className="text-muted" aria-hidden />
       <span>{isID ? 'ID' : 'EN'}</span>
     </button>
   )

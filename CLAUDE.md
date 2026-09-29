@@ -48,7 +48,10 @@ All routes except register/login/health require auth. Responses look like `{ dat
 ## Deploy
 
 - Web: Netlify (`netlify.toml`). It builds `apps/web/dist` and proxies `/api/*` to the Railway API.
-- API: Railway, using `apps/api/dockerfile` and `apps/api/railway.json` (health check `/health`). Railway waits for the GitHub Actions CI (`.github/workflows/deploy-api.yml`) to pass.
+- API: Railway. The whole project (api, Postgres, volume, web) is defined as code in `.railway/railway.ts` (Railway IaC, SDK `railway` pinned in the root `package.json`). Change infra there, then `railway config plan` → `railway config apply`; never in the dashboard. An apply deletes resources missing from the file, and secrets stay as `preserve()` (never inline values, never `pull --include-variables`).
+  - The api currently builds with Railpack (not `apps/api/dockerfile`) and starts with `pnpm --filter api start`, so Prisma migrations do **not** run on deploy.
+  - Railway waits for the GitHub Actions CI (`.github/workflows/deploy-api.yml`) to pass (`checkSuites: true`).
+  - Windows: install the CLI with Scoop (`scoop install railway`), not npm/pnpm. The SDK's version check can't run the `.cmd` wrapper npm/pnpm create and fails with a misleading "requires Railway CLI 5.42.1" error.
 - `.github/workflows/deploy-web.yml` runs type-check and build for the web app.
 
 ## Current Phase

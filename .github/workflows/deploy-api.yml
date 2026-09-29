@@ -1,7 +1,7 @@
 name: API CI
 
-# Deployment is handled by Railway's GitHub integration (config: apps/api/railway.json).
-# With "Wait for CI" enabled on the Railway service, a deploy only starts after this passes.
+# Deployment is handled by Railway's GitHub integration (config: .railway/railway.ts).
+# The api service has checkSuites enabled, so a deploy only starts after this passes.
 
 on:
   push:

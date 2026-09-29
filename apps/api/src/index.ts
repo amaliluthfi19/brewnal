@@ -12,8 +12,13 @@ import { aiRoutes } from './modules/ai/ai.routes'
 import { profileRoutes } from './modules/profile/profile.routes'
 
 // Never sign tokens with a guessable secret
-if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
-  console.error('JWT_SECRET is missing or shorter than 32 characters. Set it in apps/api/.env')
+// Log only the length, never the value
+if (!process.env.JWT_SECRET) {
+  console.error('JWT_SECRET is not set. Set it in apps/api/.env locally, or in the service Variables on Railway.')
+  process.exit(1)
+}
+if (process.env.JWT_SECRET.length < 32) {
+  console.error(`JWT_SECRET is ${process.env.JWT_SECRET.length} characters; it must be at least 32.`)
   process.exit(1)
 }
 
@@ -59,7 +64,7 @@ app.get('/health', async () => ({ status: 'ok', app: 'Brewnal API' }))
 // Start
 const start = async () => {
   try {
-    const port = Number(process.env.PORT) ?? 3001
+    const port = Number(process.env.PORT) || 3001
     await app.listen({ port, host: '0.0.0.0' })
     console.log(`Brewnal API running on port ${port}`)
   } catch (err) {

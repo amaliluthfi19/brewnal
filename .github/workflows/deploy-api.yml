@@ -1,8 +1,16 @@
-name: Deploy API
+name: API CI
+
+# Deployment is handled by Railway's GitHub integration (config: apps/api/railway.json).
+# With "Wait for CI" enabled on the Railway service, a deploy only starts after this passes.
 
 on:
   push:
     branches: [master]
+    paths:
+      - "apps/api/**"
+      - "packages/types/**"
+      - "pnpm-lock.yaml"
+  pull_request:
     paths:
       - "apps/api/**"
       - "packages/types/**"
@@ -14,32 +22,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
-        with:
-          version: 9
+      # pnpm version comes from "packageManager" in package.json
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: "pnpm"
-      - run: pnpm install
+      - run: pnpm install --frozen-lockfile
       - run: pnpm --filter api db:generate
       - run: pnpm --filter api type-check
       - run: pnpm --filter api build
-
-  deploy:
-    name: Deploy to VPS
-    needs: validate
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          port: ${{ secrets.VPS_PORT }}
-          script: |
-            cd ${{ secrets.APP_DIR }}
-            git pull origin master
-            cd apps/api
-            docker compose up -d --build

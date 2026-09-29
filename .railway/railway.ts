@@ -7,19 +7,16 @@ export default defineRailway(() => {
   const api = service("api", {
     source: github("amaliluthfi19/brewnal", { branch: "master", checkSuites: true }),
     build: { buildCommand: "pnpm --filter api build", buildEnvironment: "V3", builder: "RAILPACK", watchPatterns: ["/apps/api/**"] },
+    // Apply pending Prisma migrations before each deploy goes live; a failed migration aborts the deploy
+    preDeploy: "pnpm --filter api db:deploy",
     start: "pnpm --filter api start",
     replicas: { "us-west2": 1 },
-    networking: { tcpProxies: { "5432": {} } },
-    env: { DATABASE_URL: preserve(), JWT_SECRET: preserve() },
-  });
-  const web = service("web", {
-    source: github("amaliluthfi19/brewnal", { branch: "master", checkSuites: false }),
-    build: { buildCommand: "pnpm --filter web build", buildEnvironment: "V3", builder: "RAILPACK", watchPatterns: ["/apps/web/**"] },
-    start: "pnpm --filter web dev",
-    replicas: { "us-west2": 1 },
+    // Must match the service domain's target port (8080), or the edge returns 502
+    env: { DATABASE_URL: preserve(), JWT_SECRET: preserve(), PORT: "8080" },
   });
 
+  // The web app is hosted on Netlify (netlify.toml), not Railway
   return project("brewnal-project", {
-    resources: [api, Postgres, web, postgresVolume],
+    resources: [api, Postgres, postgresVolume],
   });
 });

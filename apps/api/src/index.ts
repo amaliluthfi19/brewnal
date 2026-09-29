@@ -64,7 +64,7 @@ app.get('/health', async () => ({ status: 'ok', app: 'Brewnal API' }))
 // Start
 const start = async () => {
   try {
-    const port = Number(process.env.PORT) || 5432
+    const port = Number(process.env.PORT) || 3001
     await app.listen({ port, host: '0.0.0.0' })
     console.log(`Brewnal API running on port ${port}`)
   } catch (err) {

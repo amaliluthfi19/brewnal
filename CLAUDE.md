@@ -4,24 +4,65 @@ Specialty coffee brewing journal app.
 
 ## Stack
 
-- FE: React + Vite + TypeScript (apps/web)
-- BE: Node.js + Fastify + TypeScript (apps/api)
-- ORM: Prisma
-- DB: PostgreSQL (VPS)
-- Storage: VPS
-- AI: Gemini
-- i18n: i18next (ID + EN)
+- Monorepo: pnpm workspaces + Turborepo. Shared types live in `packages/types` (`@brewnal/types`), used by both apps.
+- FE (`apps/web`): React 18 + Vite + TypeScript, react-router v6, TanStack Query (server state), Zustand (auth store), axios with `withCredentials`, Tailwind.
+- BE (`apps/api`): Node 20 + Fastify 5 + TypeScript, with `@fastify/jwt`, `@fastify/cookie`, `@fastify/cors`, `@fastify/multipart` (5 MB limit).
+- ORM: Prisma 7 with `@prisma/adapter-pg`. Schema is in `apps/api/prisma/schema.prisma` and config in `apps/api/prisma.config.ts`.
+- DB: PostgreSQL 16 (`apps/api/compose.yaml` for local Docker).
+- Storage: not implemented yet (target: VPS). `Bean.photoUrl` is only rendered when self-hosted. The `SUPABASE_*` vars in `.env.example` are unused leftovers.
+- AI scan: currently OCR.space plus regex parsing (`apps/api/src/modules/ai/ai.service.ts`, `OCR_SPACE_API_KEY`). The target is Gemini. The `@anthropic-ai/sdk` dependency is unused.
+- i18n: i18next (ID + EN) on both sides. Web translations are inline in `apps/web/src/lib/i18n.ts` (fallback `id`). API error messages are in `apps/api/src/lib/i18n.ts`, chosen by `Accept-Language`.
 - prioritize security
+
+## Structure
+
+- API modules are in `apps/api/src/modules/<name>/` as `<name>.routes.ts` + `<name>.service.ts` (+ `<name>.schema.ts` for Fastify JSON schemas). Auth uses the `authenticate` preHandler in `src/middleware/auth.middleware.ts`.
+- Web: `pages/` (auth, beans, brews, dashboard), `services/*.service.ts` (axios calls), `components/ui` (Stepper, SensoryInput, StarRating, TastingNoteInput, ComboInput, PasswordInput, LanguageToggle), `components/layout`, `lib/brew-presets.ts`.
+- The brew form is a wizard (`pages/brews/wizard/`) with four steps: ChooseBean → Tools → Recipe → Rating. It's used for both create and edit.
+
+## API
+
+All routes except register/login/health require auth. Responses look like `{ data, message }` or `{ error, statusCode }`.
+
+- `/auth`: `POST /register`, `POST /login`, `POST /logout` (blacklists the token), `GET /me`
+- `/beans`: `GET /`, `GET /:id`, `POST /`, `PUT /:id`, `DELETE /:id`
+- `/brews`: `GET /`, `GET /suggestions`, `GET /:id`, `POST /`, `PUT /:id`, `DELETE /:id`
+- `/ai`: `POST /scan-label` (multipart image)
+- `/profile`: `PATCH /identity` (brewer identity: `BEGINNER`, `HOME_BREWER`, `BARISTA_CAFE`, `BARISTA_COMPETITION`)
+- `GET /health`
+
+## Security Conventions
+
+- JWT is stored in an httpOnly cookie named `token` (`secure` in production, `sameSite: 'strict'`). Never store tokens in localStorage.
+- The API refuses to start if `JWT_SECRET` is missing or shorter than 32 characters.
+- Logout writes the token to `TokenBlacklist`, and `authenticate` checks it.
+- CORS allows only `CORS_ORIGIN`, with credentials.
+- Every query must be scoped to the authenticated `userId`.
+
+## Commands
+
+- `pnpm dev` / `pnpm build` / `pnpm type-check` from the root (Turbo).
+- `pnpm --filter api db:migrate` / `db:generate` / `db:studio`.
+- Env: copy `apps/api/.env.example` and `apps/web/.env.example` to `.env`.
+
+## Deploy
+
+- Web: Netlify (`netlify.toml`). It builds `apps/web/dist` and proxies `/api/*` to the Railway API.
+- API: Railway, using `apps/api/dockerfile` and `apps/api/railway.json` (health check `/health`). Railway waits for the GitHub Actions CI (`.github/workflows/deploy-api.yml`) to pass.
+- `.github/workflows/deploy-web.yml` runs type-check and build for the web app.
 
 ## Current Phase
 
-MVP — urutan dev:
+MVP. All five first-pass features exist:
 
-1. Auth flow (register, login, JWT) ← NEXT
-2. Beans CRUD
-3. Brew Journal CRUD
-4. AI scan kemasan
-5. Dashboard
+1. Auth (register, login, logout, `/me`, cookie JWT) ✅
+2. Beans CRUD ✅
+3. Brew Journal CRUD (wizard + suggestions) ✅
+4. Label scan (OCR.space; Gemini still to come) ✅
+5. Dashboard (built from the beans + brews queries) ✅
+
+Also built: brewer-identity onboarding (`/profile/identity`).
+Open items: photo upload to storage, switching the scan to Gemini.
 
 ## Key Decisions
 

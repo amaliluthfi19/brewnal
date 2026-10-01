@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next'
 import { Star } from 'lucide-react'
 import { brewsService } from '../../services/brews.service'
 import { beansService } from '../../services/beans.service'
+import { renderBrewCard } from '../../lib/share-card'
+import { ShareCardButton } from '../../components/share/ShareCardButton'
 
 export function BrewDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -50,6 +52,28 @@ export function BrewDetailPage() {
     { label: t('brew:pourCount'), value: brew.pourCount?.toString() },
   ].filter(({ value }) => value)
 
+  const drinkName = t(`brew:wizard.drinks.${brew.drinkType}`, brew.drinkType)
+
+  // Pour count and free-text notes stay off the card: the first is noise at a
+  // glance, the second is personal and may be private
+  const shareCard = () =>
+    renderBrewCard({
+      brew,
+      bean,
+      title: drinkName,
+      date: new Date(brew.createdAt).toLocaleDateString(),
+      params: params.filter(
+        (p): p is { label: string; value: string } => !!p.value && p.label !== t('brew:pourCount'),
+      ),
+      sensoryTitle: t('brew:actualProfile'),
+      sensory: [
+        { label: t('sensory:bodyness'), value: brew.actualBodyness },
+        { label: t('sensory:sweetness'), value: brew.actualSweetness },
+        { label: t('sensory:acidity'), value: brew.actualAcidity },
+      ],
+      footer: t('common:share.brewFooter'),
+    })
+
   return (
     <div className="max-w-lg mx-auto space-y-4">
       {/* Header */}
@@ -63,12 +87,15 @@ export function BrewDetailPage() {
               {bean.roastery} — {bean.beanName}
             </Link>
           )}
-          <h1 className="font-display text-2xl font-black text-ink">
-            {t(`brew:wizard.drinks.${brew.drinkType}`, brew.drinkType)}
-          </h1>
+          <h1 className="font-display text-2xl font-black text-ink">{drinkName}</h1>
           <p className="text-xs text-muted">{new Date(brew.createdAt).toLocaleString()}</p>
         </div>
         <div className="flex gap-2 shrink-0">
+          <ShareCardButton
+            render={shareCard}
+            fileName={`brewnal-${brew.drinkType}${bean ? `-${bean.beanName}` : ''}`}
+            shareTitle={bean ? `${drinkName} — ${bean.beanName}` : drinkName}
+          />
           <Link
             to={`/brews/${id}/edit`}
             className="px-3 py-1.5 rounded-lg border border-border text-sm text-ink hover:border-primary transition-colors"

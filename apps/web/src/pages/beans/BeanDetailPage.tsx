@@ -5,6 +5,8 @@ import { Star } from 'lucide-react'
 import { beansService } from '../../services/beans.service'
 import { brewsService } from '../../services/brews.service'
 import { beanPhotoSrc } from '../../lib/bean-photo'
+import { renderBeanCard } from '../../lib/share-card'
+import { ShareCardButton } from '../../components/share/ShareCardButton'
 
 export function BeanDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -38,6 +40,11 @@ export function BeanDetailPage() {
   const brews = brewsRes?.data.data ?? []
   const photoSrc = beanPhotoSrc(bean.photoUrl)
 
+  // Stored as UTC midnight, so format in UTC to keep the calendar day the user picked
+  const roastDate = bean.roastDate
+    ? new Date(bean.roastDate).toLocaleDateString(undefined, { timeZone: 'UTC' })
+    : undefined
+
   const details = [
     { label: t('beans:originCountry'), value: bean.originCountry },
     { label: t('beans:originRegion'), value: bean.originRegion },
@@ -45,12 +52,27 @@ export function BeanDetailPage() {
     { label: t('beans:varietal'), value: bean.varietal },
     { label: t('beans:process'), value: bean.process },
     { label: t('beans:roastLevel'), value: bean.roastLevel },
-    {
-      label: t('beans:roastDate'),
-      // Stored as UTC midnight, so format in UTC to keep the calendar day the user picked
-      value: bean.roastDate ? new Date(bean.roastDate).toLocaleDateString(undefined, { timeZone: 'UTC' }) : undefined,
-    },
+    { label: t('beans:roastDate'), value: roastDate },
   ].filter(({ value }) => value)
+
+  // Free-text notes stay off the card: they're personal and may be private
+  const shareCard = () =>
+    renderBeanCard({
+      bean,
+      tags: [bean.originCountry, bean.originRegion].filter((v): v is string => !!v),
+      details: [
+        { label: t('beans:altitude'), value: bean.altitude ? `${bean.altitude} mdpl` : undefined },
+        { label: t('beans:varietal'), value: bean.varietal },
+        { label: t('beans:roastDate'), value: roastDate },
+      ].filter((d): d is { label: string; value: string } => !!d.value),
+      sensoryTitle: t('beans:expectedProfile'),
+      sensory: [
+        { label: t('sensory:bodyness'), value: bean.expectedBodyness },
+        { label: t('sensory:sweetness'), value: bean.expectedSweetness },
+        { label: t('sensory:acidity'), value: bean.expectedAcidity },
+      ],
+      footer: t('common:share.beanFooter'),
+    })
 
   return (
     <div className="max-w-lg mx-auto space-y-5">
@@ -70,6 +92,11 @@ export function BeanDetailPage() {
           </div>
         </div>
         <div className="flex gap-2 shrink-0">
+          <ShareCardButton
+            render={shareCard}
+            fileName={`brewnal-${bean.roastery}-${bean.beanName}`}
+            shareTitle={`${bean.roastery} — ${bean.beanName}`}
+          />
           <Link
             to={`/beans/${id}/edit`}
             className="px-3 py-1.5 rounded-lg border border-border text-sm text-ink hover:border-primary transition-colors"

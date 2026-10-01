@@ -5,8 +5,10 @@ import { API_BASE_URL } from './api'
 // stored value can never make the browser request a third-party host
 const PHOTO_PATH = /^\/beans\/[a-z0-9]+\/photo(\?v=\d+)?$/
 
+export const isBeanPhotoPath = (photoUrl: string) => PHOTO_PATH.test(photoUrl)
+
 export const beanPhotoSrc = (photoUrl?: string | null) =>
-  photoUrl && PHOTO_PATH.test(photoUrl) ? `${API_BASE_URL.replace(/\/$/, '')}${photoUrl}` : undefined
+  photoUrl && isBeanPhotoPath(photoUrl) ? `${API_BASE_URL.replace(/\/$/, '')}${photoUrl}` : undefined
 
 // Must stay at or below the API's multipart limit
 export const PHOTO_MAX_BYTES = 5 * 1024 * 1024

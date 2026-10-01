@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Star } from 'lucide-react'
 import { beansService } from '../../services/beans.service'
 import { brewsService } from '../../services/brews.service'
+import { beanPhotoSrc } from '../../lib/bean-photo'
 
 export function BeanDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -35,6 +36,7 @@ export function BeanDetailPage() {
   if (!bean) return <p className="text-danger text-center py-12">{t('beans:emptyState')}</p>
 
   const brews = brewsRes?.data.data ?? []
+  const photoSrc = beanPhotoSrc(bean.photoUrl)
 
   const details = [
     { label: t('beans:originCountry'), value: bean.originCountry },
@@ -50,9 +52,18 @@ export function BeanDetailPage() {
     <div className="max-w-lg mx-auto space-y-5">
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-xs text-muted font-mono">{bean.roastery}</p>
-          <h1 className="font-display text-2xl font-black text-ink">{bean.beanName}</h1>
+        <div className="flex min-w-0 items-center gap-3">
+          {photoSrc && (
+            <img
+              src={photoSrc}
+              alt={t('beans:photoAlt', { name: bean.beanName })}
+              className="h-20 w-20 shrink-0 rounded-lg object-cover"
+            />
+          )}
+          <div className="min-w-0">
+            <p className="text-xs text-muted font-mono">{bean.roastery}</p>
+            <h1 className="font-display text-2xl font-black text-ink">{bean.beanName}</h1>
+          </div>
         </div>
         <div className="flex gap-2 shrink-0">
           <Link

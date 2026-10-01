@@ -1,7 +1,9 @@
 import axios from 'axios'
 
+export const API_BASE_URL: string = import.meta.env.VITE_API_URL ?? 'http://localhost:5432'
+
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:5432',
+  baseURL: API_BASE_URL,
   headers: { 'Content-Type': 'application/json' },
   withCredentials: true, // send httpOnly cookie on every request
 })

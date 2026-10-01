@@ -1,10 +1,7 @@
 import { Bean as BeanIcon, Check } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { Bean } from '@brewnal/types'
-
-// Only same-origin paths render as images: keeps CSP at img-src 'self' and
-// stops a stored photoUrl from pinging a third-party host
-const isSelfHosted = (url?: string) => !!url && url.startsWith('/') && !url.startsWith('//')
+import { beanPhotoSrc } from '../../lib/bean-photo'
 
 interface BeanCardProps {
   bean: Bean
@@ -17,14 +14,15 @@ interface BeanCardProps {
 
 export function BeanCard({ bean, selected, onSelect, actions }: BeanCardProps) {
   const { t } = useTranslation('beans')
+  const photoSrc = beanPhotoSrc(bean.photoUrl)
 
   const body = (
     <>
       <div className="flex gap-3">
         <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-secondary/15 text-secondary-ink flex items-center justify-center">
-          {isSelfHosted(bean.photoUrl) ? (
+          {photoSrc ? (
             <img
-              src={bean.photoUrl}
+              src={photoSrc}
               alt={t('photoAlt', { name: bean.beanName })}
               className="h-full w-full object-cover"
             />

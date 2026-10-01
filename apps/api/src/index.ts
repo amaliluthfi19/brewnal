@@ -8,7 +8,7 @@ import multipart from '@fastify/multipart'
 import { authRoutes } from './modules/auth/auth.routes'
 import { beansRoutes } from './modules/beans/beans.routes'
 import { brewRoutes } from './modules/brew/brew.routes'
-import { aiRoutes } from './modules/ai/ai.routes'
+// import { aiRoutes } from './modules/ai/ai.routes'
 import { profileRoutes } from './modules/profile/profile.routes'
 
 // Never sign tokens with a guessable secret
@@ -55,7 +55,9 @@ app.addHook('onSend', async (req, reply, payload) => {
 app.register(authRoutes, { prefix: '/auth' })
 app.register(beansRoutes, { prefix: '/beans' })
 app.register(brewRoutes, { prefix: '/brews' })
-app.register(aiRoutes, { prefix: '/ai' })
+// The label scan is switched off until it moves to Gemini (see SCAN_ENABLED in
+// the web BeanFormPage); an unused route should not stay reachable
+// app.register(aiRoutes, { prefix: '/ai' })
 app.register(profileRoutes, { prefix: '/profile' })
 
 // Health check

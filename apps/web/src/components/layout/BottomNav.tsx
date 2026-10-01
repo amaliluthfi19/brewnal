@@ -37,7 +37,8 @@ export function BottomNav() {
   ]
   const right: Tab[] = [
     { to: '/brews', label: t('nav.journal'), icon: BookOpen },
-    { to: '/beans/new', label: t('nav.scan'), icon: Camera, end: true },
+    // Was "Scan" (nav.scan) while the label scan was on; switch back with SCAN_ENABLED
+    { to: '/beans/new', label: t('nav.addBean'), icon: Camera, end: true },
   ]
 
   return (

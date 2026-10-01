@@ -12,6 +12,17 @@ export const beansService = {
 
   delete: (id: string) => api.delete(`/beans/${id}`),
 
+  uploadPhoto: (id: string, file: File) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return api.post<{ data: { photoUrl: string } }>(`/beans/${id}/photo`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
+
+  deletePhoto: (id: string) => api.delete(`/beans/${id}/photo`),
+
+  // Not called while the scan is switched off (SCAN_ENABLED in BeanFormPage)
   scanLabel: (file: File) => {
     const formData = new FormData()
     formData.append('file', file)

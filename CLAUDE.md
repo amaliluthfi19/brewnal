@@ -9,8 +9,8 @@ Specialty coffee brewing journal app.
 - BE (`apps/api`): Node 20 + Fastify 5 + TypeScript, with `@fastify/jwt`, `@fastify/cookie`, `@fastify/cors`, `@fastify/multipart` (5 MB limit).
 - ORM: Prisma 7 with `@prisma/adapter-pg`. Schema is in `apps/api/prisma/schema.prisma` and config in `apps/api/prisma.config.ts`.
 - DB: PostgreSQL 16 (`apps/api/compose.yaml` for local Docker).
-- Storage: not implemented yet (target: VPS). `Bean.photoUrl` is only rendered when self-hosted. The `SUPABASE_*` vars in `.env.example` are unused leftovers.
-- AI scan: currently OCR.space plus regex parsing (`apps/api/src/modules/ai/ai.service.ts`, `OCR_SPACE_API_KEY`). The target is Gemini. The `@anthropic-ai/sdk` dependency is unused.
+- Storage: private Railway bucket (S3-compatible, `@aws-sdk/client-s3`) through `apps/api/src/lib/storage.ts`, configured by the `S3_*` vars. Objects are never public: photos are read only through `GET /beans/:id/photo`. `Bean.photoUrl` holds that path relative to the API root and is only rendered when same-origin. Without the `S3_*` vars (local dev) the photo routes return 503. On the web, the bean form picks the photo, downscales it to a 1600px JPEG in the browser (`lib/bean-photo.ts`, which also drops EXIF) and uploads it after the bean is saved; always build the `<img src>` with `beanPhotoSrc()`.
+- AI scan: **switched off for now** (`SCAN_ENABLED = false` in `apps/web/src/pages/beans/BeanFormPage.tsx`, and the `/ai` routes are commented out in `apps/api/src/index.ts`; re-enable both together). The code is OCR.space plus regex parsing (`apps/api/src/modules/ai/ai.service.ts`, `OCR_SPACE_API_KEY`). The target is Gemini. The `@anthropic-ai/sdk` dependency is unused.
 - i18n: i18next (ID + EN) on both sides. Web translations are inline in `apps/web/src/lib/i18n.ts` (fallback `id`). API error messages are in `apps/api/src/lib/i18n.ts`, chosen by `Accept-Language`.
 - prioritize security
 
@@ -25,9 +25,9 @@ Specialty coffee brewing journal app.
 All routes except register/login/health require auth. Responses look like `{ data, message }` or `{ error, statusCode }`.
 
 - `/auth`: `POST /register`, `POST /login`, `POST /logout` (blacklists the token), `GET /me`
-- `/beans`: `GET /`, `GET /:id`, `POST /`, `PUT /:id`, `DELETE /:id`
+- `/beans`: `GET /`, `GET /:id`, `POST /`, `PUT /:id`, `DELETE /:id`, and `POST|GET|DELETE /:id/photo` (multipart image; JPEG, PNG or WebP, checked by magic bytes)
 - `/brews`: `GET /`, `GET /suggestions`, `GET /:id`, `POST /`, `PUT /:id`, `DELETE /:id`
-- `/ai`: `POST /scan-label` (multipart image)
+- `/ai`: `POST /scan-label` (multipart image). Currently not registered.
 - `/profile`: `PATCH /identity` (brewer identity: `BEGINNER`, `HOME_BREWER`, `BARISTA_CAFE`, `BARISTA_COMPETITION`)
 - `GET /health`
 
@@ -48,7 +48,7 @@ All routes except register/login/health require auth. Responses look like `{ dat
 ## Deploy
 
 - Web: Netlify (`netlify.toml`). It builds `apps/web/dist` and proxies `/api/*` to the Railway API.
-- API: Railway. The whole project (api, Postgres, volume, web) is defined as code in `.railway/railway.ts` (Railway IaC, SDK `railway` pinned in the root `package.json`). Change infra there, then `railway config plan` → `railway config apply`; never in the dashboard. An apply deletes resources missing from the file, and secrets stay as `preserve()` (never inline values, never `pull --include-variables`).
+- API: Railway. The whole project (api, Postgres, volume, photo bucket) is defined as code in `.railway/railway.ts` (Railway IaC, SDK `railway` pinned in the root `package.json`). Change infra there, then `railway config plan` → `railway config apply`; never in the dashboard. An apply deletes resources missing from the file, and secrets stay as `preserve()` (never inline values, never `pull --include-variables`).
   - The api currently builds with Railpack (not `apps/api/dockerfile`) and starts with `pnpm --filter api start`. Prisma migrations run as the Railway `preDeploy` step (`pnpm --filter api db:deploy` → `prisma migrate deploy`).
   - Railway waits for the GitHub Actions CI (`.github/workflows/deploy-api.yml`) to pass (`checkSuites: true`).
   - Windows: install the CLI with Scoop (`scoop install railway`), not npm/pnpm. The SDK's version check can't run the `.cmd` wrapper npm/pnpm create and fails with a misleading "requires Railway CLI 5.42.1" error.
@@ -65,7 +65,7 @@ MVP. All five first-pass features exist:
 5. Dashboard (built from the beans + brews queries) ✅
 
 Also built: brewer-identity onboarding (`/profile/identity`).
-Open items: photo upload to storage, switching the scan to Gemini.
+Open items: switching the scan to Gemini and turning it back on, local storage for dev (MinIO).
 
 ## Key Decisions
 
@@ -116,7 +116,7 @@ Always use these collections. Don't mix in other sets, emoji-as-icons, or AI-gen
 
 ### Photos: Unsplash (https://unsplash.com/license), outside the app UI only
 
-- The design system says **no photography in the app UI**. Use photos only for non-app surfaces: a landing page, social/OG images, and store listings. User-uploaded bean photos come from our own VPS storage.
+- The design system says **no photography in the app UI**. Use photos only for non-app surfaces: a landing page, social/OG images, and store listings. User-uploaded bean photos come from our own private bucket, served through the API.
 - Fallback source: Pexels (https://www.pexels.com/license).
 - Self-host, never hotlink: download, resize to WebP (max 1600px wide, ≤200 KB), and save to `apps/web/public/photos/`. This keeps a tight CSP (`img-src 'self'`).
 - Record every photo in `apps/web/public/photos/CREDITS.md` with the file name, photographer, source URL, and license.

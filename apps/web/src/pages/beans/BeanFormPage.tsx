@@ -2,10 +2,16 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { ArrowLeft, Camera } from 'lucide-react'
+import { ArrowLeft, Bean as BeanIcon, Camera } from 'lucide-react'
 import { beansService } from '../../services/beans.service'
 import { SensoryInput } from '../../components/ui/SensoryInput'
+import { beanPhotoSrc, prepareBeanPhoto, PHOTO_MAX_BYTES } from '../../lib/bean-photo'
 import type { CreateBeanDto, ScanResult, ProcessMethod, RoastLevel } from '@brewnal/types'
+
+// The label scan is switched off until it moves to Gemini; the bean photo takes
+// its place on the form. The API route (/ai/scan-label) is unregistered too, so
+// re-enable both together.
+const SCAN_ENABLED = false
 
 const PROCESS_OPTIONS: ProcessMethod[] = ['Natural', 'Washed', 'Honey', 'Anaerobic', 'Other']
 const ROAST_OPTIONS: RoastLevel[] = ['Light', 'Light-Medium', 'Medium', 'Medium-Dark', 'Dark']
@@ -56,12 +62,31 @@ export function BeanFormPage() {
   const [scanning, setScanning] = useState(false)
   const [scanError, setScanError] = useState('')
   const [error, setError] = useState('')
+  const photoRef = useRef<HTMLInputElement>(null)
+  // The photo is only sent on save, after the bean itself is stored
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const [photoPreview, setPhotoPreview] = useState<string>()
+  const [removePhoto, setRemovePhoto] = useState(false)
+  const [photoError, setPhotoError] = useState('')
 
   const { data: beanRes } = useQuery({
     queryKey: ['beans', id],
     queryFn: () => beansService.getById(id!),
     enabled: isEdit,
   })
+
+  useEffect(() => {
+    if (!photoFile) {
+      setPhotoPreview(undefined)
+      return
+    }
+    const url = URL.createObjectURL(photoFile)
+    setPhotoPreview(url)
+    return () => URL.revokeObjectURL(url)
+  }, [photoFile])
+
+  const savedPhotoSrc = removePhoto ? undefined : beanPhotoSrc(beanRes?.data.data.photoUrl)
+  const photoSrc = photoPreview ?? savedPhotoSrc
 
   useEffect(() => {
     const b = beanRes?.data.data
@@ -84,20 +109,63 @@ export function BeanFormPage() {
   }, [beanRes])
 
   const saveMutation = useMutation({
-    mutationFn: (data: CreateBeanDto) =>
-      isEdit ? beansService.update(id!, data) : beansService.create(data),
-    onSuccess: (res) => {
+    mutationFn: async (data: CreateBeanDto) => {
+      let beanId = id
+      if (isEdit) await beansService.update(id!, data)
+      else beanId = (await beansService.create(data)).data.data.id
+
+      // The bean is saved at this point, so a photo failure is reported
+      // separately instead of failing the whole save
+      let photoFailure: string | undefined
+      try {
+        if (photoFile) await beansService.uploadPhoto(beanId!, photoFile)
+        else if (removePhoto && beanRes?.data.data.photoUrl) await beansService.deletePhoto(beanId!)
+      } catch (err: any) {
+        photoFailure = err.response?.data?.error ?? ''
+      }
+      return { beanId: beanId!, photoFailure }
+    },
+    onSuccess: ({ beanId, photoFailure }) => {
       qc.invalidateQueries({ queryKey: ['beans'] })
-      const created = !isEdit && 'data' in res.data ? res.data.data : undefined
-      if (returnTo && created) {
+      if (photoFailure !== undefined) {
+        setPhotoError([t('beans:photoSaveFailed'), photoFailure].filter(Boolean).join(' '))
+        // Continue on the edit form so a retry updates this bean instead of creating a duplicate
+        if (!isEdit) navigate(`/beans/${beanId}/edit`, { replace: true })
+        return
+      }
+      if (returnTo && !isEdit) {
         // Back into the brew wizard with the new bean already picked
-        navigate(`${returnTo}?beanId=${encodeURIComponent(created.id)}&step=1`, { replace: true })
+        navigate(`${returnTo}?beanId=${encodeURIComponent(beanId)}&step=1`, { replace: true })
         return
       }
       navigate(isEdit ? `/beans/${id}` : '/beans')
     },
     onError: (err: any) => setError(err.response?.data?.error ?? 'Gagal menyimpan'),
   })
+
+  const handlePhotoPick = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setPhotoError('')
+    try {
+      const prepared = await prepareBeanPhoto(file)
+      if (prepared.size > PHOTO_MAX_BYTES) {
+        setPhotoError(t('beans:photoTooLarge'))
+        return
+      }
+      setPhotoFile(prepared)
+      setRemovePhoto(false)
+    } catch {
+      setPhotoError(t('beans:photoInvalid'))
+    }
+  }
+
+  const handlePhotoRemove = () => {
+    setPhotoError('')
+    setPhotoFile(null)
+    setRemovePhoto(true)
+  }
 
   const handleScan = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -164,8 +232,45 @@ export function BeanFormPage() {
         </h1>
       </div>
 
-      {/* AI Scan */}
-      {!isEdit && (
+      {/* Bean photo */}
+      <section className="bg-surface border border-border rounded-xl p-4 flex items-center gap-4">
+        <input
+          ref={photoRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handlePhotoPick}
+        />
+        <div className="h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-secondary/15 text-secondary-ink flex items-center justify-center">
+          {photoSrc ? (
+            <img src={photoSrc} alt={t('beans:photoPreviewAlt')} className="h-full w-full object-cover" />
+          ) : (
+            <BeanIcon size={28} aria-hidden />
+          )}
+        </div>
+        <div className="min-w-0 space-y-2">
+          <p className="text-sm text-muted">{t('beans:photoHint')}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => photoRef.current?.click()}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary/15 text-ink text-sm font-medium hover:bg-secondary/25 transition-colors"
+            >
+              <Camera size={16} aria-hidden />
+              {photoSrc ? t('beans:photoChange') : t('beans:photoAdd')}
+            </button>
+            {photoSrc && (
+              <button type="button" onClick={handlePhotoRemove} className="px-2 py-2 text-sm text-danger">
+                {t('beans:photoRemove')}
+              </button>
+            )}
+          </div>
+          {photoError && <p className="text-xs text-danger">{photoError}</p>}
+        </div>
+      </section>
+
+      {/* AI Scan (hidden while SCAN_ENABLED is false) */}
+      {SCAN_ENABLED && !isEdit && (
         <div className="bg-surface border border-dashed border-secondary rounded-xl p-4 text-center">
           <input
             ref={fileRef}

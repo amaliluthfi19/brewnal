@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { ArrowLeft, Bean as BeanIcon, Camera } from 'lucide-react'
+import { ArrowLeft, Bean as BeanIcon, Camera, Image as ImageIcon } from 'lucide-react'
 import { beansService } from '../../services/beans.service'
 import { SensoryInput } from '../../components/ui/SensoryInput'
 import { beanPhotoSrc, prepareBeanPhoto, PHOTO_MAX_BYTES } from '../../lib/bean-photo'
@@ -63,6 +63,7 @@ export function BeanFormPage() {
   const [scanError, setScanError] = useState('')
   const [error, setError] = useState('')
   const photoRef = useRef<HTMLInputElement>(null)
+  const cameraRef = useRef<HTMLInputElement>(null)
   // The photo is only sent on save, after the bean itself is stored
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoPreview, setPhotoPreview] = useState<string>()
@@ -242,6 +243,16 @@ export function BeanFormPage() {
           className="hidden"
           onChange={handlePhotoPick}
         />
+        {/* `capture` opens the rear camera directly on phones; desktop browsers
+            ignore it and fall back to the file picker */}
+        <input
+          ref={cameraRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="hidden"
+          onChange={handlePhotoPick}
+        />
         <div className="h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-secondary/15 text-secondary-ink flex items-center justify-center">
           {photoSrc ? (
             <img src={photoSrc} alt={t('beans:photoPreviewAlt')} className="h-full w-full object-cover" />
@@ -254,11 +265,19 @@ export function BeanFormPage() {
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              onClick={() => photoRef.current?.click()}
+              onClick={() => cameraRef.current?.click()}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary/15 text-ink text-sm font-medium hover:bg-secondary/25 transition-colors"
             >
               <Camera size={16} aria-hidden />
-              {photoSrc ? t('beans:photoChange') : t('beans:photoAdd')}
+              {t('beans:photoCamera')}
+            </button>
+            <button
+              type="button"
+              onClick={() => photoRef.current?.click()}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary/15 text-ink text-sm font-medium hover:bg-secondary/25 transition-colors"
+            >
+              <ImageIcon size={16} aria-hidden />
+              {t('beans:photoGallery')}
             </button>
             {photoSrc && (
               <button type="button" onClick={handlePhotoRemove} className="px-2 py-2 text-sm text-danger">

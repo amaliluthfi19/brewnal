@@ -45,7 +45,11 @@ export function BeanDetailPage() {
     { label: t('beans:varietal'), value: bean.varietal },
     { label: t('beans:process'), value: bean.process },
     { label: t('beans:roastLevel'), value: bean.roastLevel },
-    { label: t('beans:roastDate'), value: bean.roastDate },
+    {
+      label: t('beans:roastDate'),
+      // Stored as UTC midnight, so format in UTC to keep the calendar day the user picked
+      value: bean.roastDate ? new Date(bean.roastDate).toLocaleDateString(undefined, { timeZone: 'UTC' }) : undefined,
+    },
   ].filter(({ value }) => value)
 
   return (

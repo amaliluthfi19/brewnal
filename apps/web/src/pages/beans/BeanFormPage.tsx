@@ -100,7 +100,8 @@ export function BeanFormPage() {
       varietal: b.varietal,
       process: b.process,
       roastLevel: b.roastLevel,
-      roastDate: b.roastDate,
+      // The API returns an ISO datetime; <input type="date"> needs YYYY-MM-DD
+      roastDate: b.roastDate?.slice(0, 10),
       notes: b.notes,
       expectedBodyness: b.expectedBodyness,
       expectedSweetness: b.expectedSweetness,

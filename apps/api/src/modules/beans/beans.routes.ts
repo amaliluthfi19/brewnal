@@ -1,4 +1,4 @@
-import { FastifyInstance } from 'fastify'
+import { FastifyError, FastifyInstance } from 'fastify'
 import { authenticate } from '../../middleware/auth.middleware'
 import {
   getBeansByUser,
@@ -9,13 +9,25 @@ import {
   saveBeanPhoto,
   getBeanPhoto,
   deleteBeanPhoto,
+  BeanInput,
 } from './beans.service'
+import { createBeanSchema, updateBeanSchema } from './beans.schema'
 import { isStorageConfigured, detectImageType } from '../../lib/storage'
 import { t, getLang } from '../../lib/i18n'
 
 export async function beansRoutes(app: FastifyInstance) {
   // All beans routes require auth
   app.addHook('preHandler', authenticate)
+
+  // Schema failures get the app's localized error shape instead of AJV's internals
+  app.setErrorHandler((err: FastifyError, req, reply) => {
+    const lang = getLang(req.headers['accept-language'])
+    if (err.validation) {
+      return reply.code(400).send({ error: t('error.validation', lang), statusCode: 400 })
+    }
+    req.log.error(err, 'beans route failed')
+    return reply.code(500).send({ error: t('error.server', lang), statusCode: 500 })
+  })
 
   // GET /beans
   app.get('/', async (req) => {
@@ -35,19 +47,19 @@ export async function beansRoutes(app: FastifyInstance) {
   })
 
   // POST /beans
-  app.post('/', async (req, reply) => {
+  app.post('/', { schema: createBeanSchema }, async (req, reply) => {
     const lang = getLang(req.headers['accept-language'])
     const { id: userId } = req.user as { id: string }
-    const bean = await createBean(userId, req.body as any)
+    const bean = await createBean(userId, req.body as BeanInput)
     return reply.code(201).send({ data: bean, message: t('beans.created', lang) })
   })
 
   // PUT /beans/:id
-  app.put('/:id', async (req, reply) => {
+  app.put('/:id', { schema: updateBeanSchema }, async (req, reply) => {
     const lang = getLang(req.headers['accept-language'])
     const { id } = req.params as { id: string }
     const { id: userId } = req.user as { id: string }
-    await updateBean(id, userId, req.body as any)
+    await updateBean(id, userId, req.body as Partial<BeanInput>)
     return reply.send({ message: t('beans.updated', lang) })
   })
 

@@ -21,16 +21,32 @@ export async function getBeanById(id: string, userId: string) {
   })
 }
 
-export async function createBean(userId: string, data: CreateBeanDto) {
+// Shape of a request body after beans.schema.ts has validated it.
+// Optional fields may be null so an edit can clear them. photoUrl is never
+// client-writable: only saveBeanPhoto sets it.
+export type BeanInput = {
+  [K in keyof Omit<CreateBeanDto, 'photoUrl'>]: undefined extends CreateBeanDto[K]
+    ? CreateBeanDto[K] | null
+    : CreateBeanDto[K]
+}
+
+// roastDate arrives as a calendar date (YYYY-MM-DD) and is stored as UTC midnight.
+// undefined leaves the column untouched on update, null clears it
+const toRoastDate = (value: string | null | undefined) => {
+  if (value === undefined) return undefined
+  return value ? new Date(`${value}T00:00:00.000Z`) : null
+}
+
+export async function createBean(userId: string, data: BeanInput) {
   return prisma.bean.create({
-    data: { ...data, userId },
+    data: { ...data, roastDate: toRoastDate(data.roastDate), userId },
   })
 }
 
-export async function updateBean(id: string, userId: string, data: Partial<CreateBeanDto>) {
+export async function updateBean(id: string, userId: string, data: Partial<BeanInput>) {
   return prisma.bean.updateMany({
     where: { id, userId },
-    data,
+    data: { ...data, roastDate: toRoastDate(data.roastDate) },
   })
 }
 

@@ -56,7 +56,7 @@ export function BrewDetailPage() {
 
   // Pour count and free-text notes stay off the card: the first is noise at a
   // glance, the second is personal and may be private
-  const shareCard = () =>
+  const shareCard = (height: number) =>
     renderBrewCard({
       brew,
       bean,
@@ -72,7 +72,7 @@ export function BrewDetailPage() {
         { label: t('sensory:acidity'), value: brew.actualAcidity },
       ],
       footer: t('common:share.brewFooter'),
-    })
+    }, height)
 
   return (
     <div className="max-w-lg mx-auto space-y-4">

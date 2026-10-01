@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Download, Share2, X } from 'lucide-react'
-import { CARD_HEIGHT, CARD_WIDTH } from '../../lib/share-card'
+import { CARD_WIDTH, shareCardHeight } from '../../lib/share-card'
 
 interface ShareCardButtonProps {
-  // Draws the card. Called each time the dialog opens so it reflects current data.
-  render: () => Promise<Blob>
+  // Draws the card at the given height. Called each time the dialog opens so it
+  // reflects current data.
+  render: (height: number) => Promise<Blob>
   // Without extension, e.g. "brewnal-bean-gayo"
   fileName: string
   shareTitle: string
@@ -26,6 +27,7 @@ export function ShareCardButton({ render, fileName, shareTitle }: ShareCardButto
   const [file, setFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string>()
   const [error, setError] = useState(false)
+  const [height, setHeight] = useState(shareCardHeight)
   const closeRef = useRef<HTMLButtonElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
 
@@ -38,7 +40,10 @@ export function ShareCardButton({ render, fileName, shareTitle }: ShareCardButto
     let url: string | undefined
     setFile(null)
     setError(false)
-    render()
+    // Re-read on open: the phone may have been rotated or the window resized
+    const h = shareCardHeight()
+    setHeight(h)
+    render(h)
       .then((blob) => {
         if (cancelled) return
         url = URL.createObjectURL(blob)
@@ -127,8 +132,9 @@ export function ShareCardButton({ render, fileName, shareTitle }: ShareCardButto
             </div>
 
             <div
-              className="w-full max-h-[60vh] mx-auto rounded-lg overflow-hidden border border-border bg-bg flex items-center justify-center"
-              style={{ aspectRatio: `${CARD_WIDTH} / ${CARD_HEIGHT}` }}
+              className="mx-auto rounded-lg overflow-hidden border border-border bg-bg flex items-center justify-center"
+              // Largest box with the card's shape that fits the dialog width and 60% of the screen height
+              style={{ aspectRatio: `${CARD_WIDTH} / ${height}`, width: `min(100%, ${(60 * CARD_WIDTH) / height}dvh)` }}
             >
               {previewUrl ? (
                 <img src={previewUrl} alt={t('share.previewAlt')} className="h-full w-full object-contain" />

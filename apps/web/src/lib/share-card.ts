@@ -5,10 +5,23 @@ import { isBeanPhotoPath } from './bean-photo'
 
 // Share cards are drawn on a canvas in the browser, so nothing is published or
 // stored on the server: the image only leaves the device when the user picks a
-// share target. 4:5 portrait is the largest shape Instagram/Threads feeds show
-// uncropped, and it still reads well in WhatsApp and X.
+// share target. On the web the card is 4:5 portrait, the largest shape
+// Instagram/Threads feeds show uncropped. On phones it takes the screen's
+// portrait ratio instead, so the background fills the screen (story-style).
 export const CARD_WIDTH = 1080
-export const CARD_HEIGHT = 1350
+const DESKTOP_HEIGHT = 1350
+const MAX_HEIGHT = 2400 // 20:9, the tallest common phone screen
+
+// Phones only: a touch screen whose short side is phone-sized. Tablets and
+// desktops keep 4:5. Uses the portrait ratio whatever the current orientation.
+export function shareCardHeight(): number {
+  const { width, height } = window.screen
+  const short = Math.min(width, height)
+  const isPhone = window.matchMedia('(pointer: coarse)').matches && short > 0 && short < 768
+  if (!isPhone) return DESKTOP_HEIGHT
+  const h = Math.round((CARD_WIDTH * Math.max(width, height)) / short)
+  return Math.min(MAX_HEIGHT, Math.max(DESKTOP_HEIGHT, h))
+}
 
 // A canvas can't read Tailwind classes. These mirror the light-theme tokens in
 // index.css (design system colors_and_type.css). The card is always light so it
@@ -110,10 +123,10 @@ async function loadBeanPhoto(photoUrl?: string | null): Promise<ImageBitmap | nu
 
 type Ctx = CanvasRenderingContext2D
 
-function newCanvas() {
+function newCanvas(height: number) {
   const canvas = document.createElement('canvas')
   canvas.width = CARD_WIDTH
-  canvas.height = CARD_HEIGHT
+  canvas.height = height
   const ctx = canvas.getContext('2d')
   if (!ctx) throw new Error('Canvas is not available')
   ctx.textBaseline = 'alphabetic'
@@ -131,9 +144,9 @@ function roundRect(ctx: Ctx, x: number, y: number, w: number, h: number, r: numb
 }
 
 // Same soft navy / yellow / orange glows as the app background
-function drawBackground(ctx: Ctx) {
+function drawBackground(ctx: Ctx, H: number) {
   ctx.fillStyle = C.bg
-  ctx.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT)
+  ctx.fillRect(0, 0, CARD_WIDTH, H)
   const glow = (cx: number, cy: number, rx: number, ry: number, ch: string, a: number) => {
     ctx.save()
     ctx.translate(cx, cy)
@@ -145,10 +158,10 @@ function drawBackground(ctx: Ctx) {
     ctx.fillRect(-ry, -ry, ry * 2, ry * 2)
     ctx.restore()
   }
-  glow(CARD_WIDTH * 0.16, CARD_HEIGHT * 0.06, CARD_WIDTH * 0.55, CARD_HEIGHT * 0.32, C.primaryCh, 0.55)
-  glow(CARD_WIDTH * 0.58, 0, CARD_WIDTH * 0.4, CARD_HEIGHT * 0.16, C.popCh, 0.45)
-  glow(CARD_WIDTH, CARD_HEIGHT * 0.14, CARD_WIDTH * 0.5, CARD_HEIGHT * 0.4, C.secondaryCh, 0.55)
-  glow(0, CARD_HEIGHT, CARD_WIDTH * 0.5, CARD_HEIGHT * 0.3, C.secondaryCh, 0.25)
+  glow(CARD_WIDTH * 0.16, H * 0.06, CARD_WIDTH * 0.55, H * 0.32, C.primaryCh, 0.55)
+  glow(CARD_WIDTH * 0.58, 0, CARD_WIDTH * 0.4, H * 0.16, C.popCh, 0.45)
+  glow(CARD_WIDTH, H * 0.14, CARD_WIDTH * 0.5, H * 0.4, C.secondaryCh, 0.55)
+  glow(0, H, CARD_WIDTH * 0.5, H * 0.3, C.secondaryCh, 0.25)
 }
 
 function drawCardSurface(ctx: Ctx, top: number, bottom: number) {
@@ -253,17 +266,18 @@ function drawGrid(ctx: Ctx, items: { label: string; value: string }[], y: number
 const SENSORY_H = 150
 
 // Grid then sensory, each behind a divider, dropping grid rows (and then the
-// sensory block) that would run past the card. Returns the y below them.
+// sensory block) that would run past the card bottom. Returns the y below them.
 function drawDetails(
   ctx: Ctx,
   y: number,
+  bottom: number,
   items: { label: string; value: string }[],
   mono: boolean,
   sensoryTitle: string,
   sensory: SensoryRow[],
   sensoryFill: string,
 ) {
-  const limit = CARD_BOTTOM - INNER
+  const limit = bottom - INNER
   const hasSensory = sensory.some((r) => r.value)
   const rowsFit = Math.floor((limit - y - 36 - (hasSensory ? SENSORY_H + 36 : 0)) / GRID_ROW_H)
   const shown = items.slice(0, Math.max(0, rowsFit) * GRID_COLS)
@@ -324,12 +338,12 @@ function drawDivider(ctx: Ctx, y: number) {
 }
 
 // Logo bottom-left of the canvas, caption bottom-right
-function drawFooter(ctx: Ctx, logo: HTMLImageElement | null, caption: string) {
-  const baseline = CARD_HEIGHT - PAD - 4
+function drawFooter(ctx: Ctx, H: number, logo: HTMLImageElement | null, caption: string) {
+  const baseline = H - PAD - 4
   if (logo) {
     const h = 64
     const w = (logo.naturalWidth / logo.naturalHeight) * h
-    ctx.drawImage(logo, CARD_X, CARD_HEIGHT - PAD - h + 8, w, h)
+    ctx.drawImage(logo, CARD_X, H - PAD - h + 8, w, h)
   } else {
     ctx.fillStyle = C.primary
     ctx.font = `900 48px ${FONT.display}`
@@ -342,12 +356,12 @@ function drawFooter(ctx: Ctx, logo: HTMLImageElement | null, caption: string) {
   ctx.textAlign = 'left'
 }
 
-// Space left for the white card once the footer is reserved
-const CARD_BOTTOM = CARD_HEIGHT - PAD - 88
+// Lowest y the white card may reach once the footer is reserved
+const cardBottom = (H: number) => H - PAD - 88
 
 // Fills the top of the white card edge to edge, cropping to cover
-function drawPhotoBanner(ctx: Ctx, img: ImageBitmap, h: number) {
-  const [x, y, w] = [CARD_X, CARD_Y, CARD_W]
+function drawPhotoBanner(ctx: Ctx, img: ImageBitmap, y: number, h: number) {
+  const [x, w] = [CARD_X, CARD_W]
   const scale = Math.max(w / img.width, h / img.height)
   const sw = w / scale
   const sh = h / scale
@@ -371,7 +385,7 @@ function toBlob(canvas: HTMLCanvasElement) {
 
 // Everything below the photo. Drawn once on a scratch canvas to measure it, so
 // the photo can take whatever height is left.
-function drawBeanBody(ctx: Ctx, content: BeanCardContent, y: number, compact: boolean) {
+function drawBeanBody(ctx: Ctx, content: BeanCardContent, y: number, bottom: number, compact: boolean) {
   const { bean } = content
   ctx.fillStyle = C.muted
   ctx.font = `500 30px ${FONT.mono}`
@@ -391,49 +405,54 @@ function drawBeanBody(ctx: Ctx, content: BeanCardContent, y: number, compact: bo
   ]
   if (chips.length) y = drawChips(ctx, chips, CONTENT_X, y, CONTENT_W) + 20
 
-  return drawDetails(ctx, y, content.details, false, content.sensoryTitle, content.sensory, C.primary)
+  return drawDetails(ctx, y, bottom, content.details, false, content.sensoryTitle, content.sensory, C.primary)
 }
 
 const PHOTO_MIN_H = 240
-const PHOTO_MAX_H = 520
+const PHOTO_MAX_H = 720
 
-// Text-only cards shrink to their content and sit centered above the footer,
-// so a short brew doesn't leave a mostly empty card. drawBody draws from the
-// given top and returns the y it ended at.
-function drawFittedCard(ctx: Ctx, drawBody: (ctx: Ctx, top: number) => number) {
-  const fullH = CARD_BOTTOM - CARD_Y
-  const contentH = drawBody(newCanvas().ctx, CARD_Y + INNER) - (CARD_Y + INNER)
-  const cardH = Math.min(fullH, Math.max(CARD_MIN_H, contentH + INNER * 2))
+// Cards shrink to their content and sit centered above the footer, so a short
+// brew (or a tall phone-shaped canvas) doesn't leave a mostly empty card.
+// drawBody draws from the given top and returns the y it ended at; it runs
+// once on a scratch canvas to measure, then for real.
+function drawFittedCard(ctx: Ctx, H: number, drawBody: (ctx: Ctx, top: number, bottom: number) => number) {
+  const bottom = cardBottom(H)
+  const fullH = bottom - CARD_Y
+  const contentH = drawBody(newCanvas(H).ctx, CARD_Y, bottom) - CARD_Y
+  const cardH = Math.min(fullH, Math.max(CARD_MIN_H, contentH + INNER))
   const top = CARD_Y + Math.round((fullH - cardH) / 2)
   drawCardSurface(ctx, top, top + cardH)
-  drawBody(ctx, top + INNER)
+  // Shift the limit with the card so the same rows get dropped as when measuring
+  drawBody(ctx, top, bottom + (top - CARD_Y))
 }
 
 const CARD_MIN_H = 360
 
-export async function renderBeanCard(content: BeanCardContent): Promise<Blob> {
+export async function renderBeanCard(content: BeanCardContent, H = shareCardHeight()): Promise<Blob> {
   const [, logo, photo] = await Promise.all([loadFonts(), loadLogo(), loadBeanPhoto(content.bean.photoUrl)])
-  const { canvas, ctx } = newCanvas()
+  const { canvas, ctx } = newCanvas(H)
 
-  drawBackground(ctx)
+  drawBackground(ctx, H)
 
   if (photo) {
-    // Measure the body as if it started at the top, then give the photo the rest
-    const bodyH = drawBeanBody(newCanvas().ctx, content, CARD_Y + 40, true) - (CARD_Y + 40)
-    const photoH = Math.max(PHOTO_MIN_H, Math.min(PHOTO_MAX_H, CARD_BOTTOM - INNER - CARD_Y - 40 - bodyH))
-    drawCardSurface(ctx, CARD_Y, CARD_BOTTOM)
-    drawPhotoBanner(ctx, photo, photoH)
+    // Give the photo whatever height the body leaves, within limits
+    const bottom = cardBottom(H)
+    const bodyH = drawBeanBody(newCanvas(H).ctx, content, CARD_Y + 40, bottom, true) - (CARD_Y + 40)
+    const photoH = Math.max(PHOTO_MIN_H, Math.min(PHOTO_MAX_H, bottom - INNER - CARD_Y - 40 - bodyH))
+    drawFittedCard(ctx, H, (c, top, limit) => {
+      drawPhotoBanner(c, photo, top, photoH)
+      return drawBeanBody(c, content, top + photoH + 40, limit, true)
+    })
     photo.close()
-    drawBeanBody(ctx, content, CARD_Y + photoH + 40, true)
   } else {
-    drawFittedCard(ctx, (c, top) => drawBeanBody(c, content, top, false))
+    drawFittedCard(ctx, H, (c, top, limit) => drawBeanBody(c, content, top + INNER, limit, false))
   }
 
-  drawFooter(ctx, logo, content.footer)
+  drawFooter(ctx, H, logo, content.footer)
   return toBlob(canvas)
 }
 
-function drawBrewBody(ctx: Ctx, content: BrewCardContent, y: number) {
+function drawBrewBody(ctx: Ctx, content: BrewCardContent, y: number, bottom: number) {
   const { brew, bean } = content
   if (bean) {
     ctx.fillStyle = C.muted
@@ -463,15 +482,15 @@ function drawBrewBody(ctx: Ctx, content: BrewCardContent, y: number) {
     y = drawChips(ctx, brew.tastingNotes.map((text) => ({ text, style: 'tasting' })), CONTENT_X, y + 8, CONTENT_W) + 16
   }
 
-  return drawDetails(ctx, y, content.params, true, content.sensoryTitle, content.sensory, C.secondary)
+  return drawDetails(ctx, y, bottom, content.params, true, content.sensoryTitle, content.sensory, C.secondary)
 }
 
-export async function renderBrewCard(content: BrewCardContent): Promise<Blob> {
+export async function renderBrewCard(content: BrewCardContent, H = shareCardHeight()): Promise<Blob> {
   const [, logo] = await Promise.all([loadFonts(), loadLogo()])
-  const { canvas, ctx } = newCanvas()
+  const { canvas, ctx } = newCanvas(H)
 
-  drawBackground(ctx)
-  drawFittedCard(ctx, (c, top) => drawBrewBody(c, content, top))
-  drawFooter(ctx, logo, content.footer)
+  drawBackground(ctx, H)
+  drawFittedCard(ctx, H, (c, top, limit) => drawBrewBody(c, content, top + INNER, limit))
+  drawFooter(ctx, H, logo, content.footer)
   return toBlob(canvas)
 }

@@ -56,7 +56,7 @@ export function BeanDetailPage() {
   ].filter(({ value }) => value)
 
   // Free-text notes stay off the card: they're personal and may be private
-  const shareCard = () =>
+  const shareCard = (height: number) =>
     renderBeanCard({
       bean,
       tags: [bean.originCountry, bean.originRegion].filter((v): v is string => !!v),
@@ -72,7 +72,7 @@ export function BeanDetailPage() {
         { label: t('sensory:acidity'), value: bean.expectedAcidity },
       ],
       footer: t('common:share.beanFooter'),
-    })
+    }, height)
 
   return (
     <div className="max-w-lg mx-auto space-y-5">

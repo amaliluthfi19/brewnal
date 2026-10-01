@@ -1,15 +1,18 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Bean, Coffee, Plus, Star } from 'lucide-react'
+import { Bean, Coffee, Plus, Star, User } from 'lucide-react'
 import { beansService } from '../../services/beans.service'
 import { brewsService } from '../../services/brews.service'
 import { useAuthStore } from '../../store/auth.store'
+import { beanPhotoSrc } from '../../lib/bean-photo'
 import coffeeIllustration from '../../assets/illustrations/coffee-tea.svg'
 
 export function DashboardPage() {
   const { t, i18n } = useTranslation(['dashboard', 'brew', 'beans', 'common'])
   const user = useAuthStore((s) => s.user)
+  const displayName = user?.displayName ?? user?.username ?? ''
+  const initial = displayName.trim().charAt(0).toUpperCase()
 
   const { data: beansRes } = useQuery({ queryKey: ['beans'], queryFn: beansService.getAll })
   const { data: brewsRes } = useQuery({ queryKey: ['brews'], queryFn: () => brewsService.getAll() })
@@ -42,20 +45,25 @@ export function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-md space-y-8">
-      {/* Greeting */}
-      <div>
-        <h1 className="font-display text-3xl font-black text-ink truncate">
-          {t('dashboard:greeting', { name: user?.displayName ?? user?.username ?? '' })}
-        </h1>
-        <p className="text-muted text-sm mt-1">{t('dashboard:subtitle')}</p>
-      </div>
-
-      {/* Overview */}
-      <section className="space-y-3">
-        <h2 className="font-display text-xl font-black text-ink">{t('dashboard:overview')}</h2>
-
+      {/* Greeting + overview */}
+      <section>
         <div className="bg-surface border border-border rounded-xl overflow-hidden">
-          <div className="p-4">
+          <div className="flex items-center gap-3 p-4">
+            <div
+              aria-hidden
+              className="h-12 w-12 shrink-0 rounded-full bg-primary text-white font-display text-xl font-black flex items-center justify-center"
+            >
+              {initial || <User size={20} />}
+            </div>
+            <div className="min-w-0">
+              <h1 className="font-display text-2xl font-black text-ink truncate">
+                {t('dashboard:greeting', { name: displayName })}
+              </h1>
+              <p className="text-muted text-sm">{t('dashboard:subtitle')}</p>
+            </div>
+          </div>
+
+          <div className="p-4 border-t border-border">
             <div className="text-sm font-bold text-ink">{t('brew:title')}</div>
             <div className="mt-3 flex items-end justify-between gap-4">
               <div>
@@ -161,22 +169,34 @@ export function DashboardPage() {
         <section className="space-y-3">
           <h2 className="font-display text-xl font-black text-ink">{t('dashboard:favoriteBeans')}</h2>
           <div className="grid grid-cols-2 gap-3">
-            {favoriteBeans.map((bean) => (
-              <Link
-                key={bean.id}
-                to={`/beans/${bean.id}`}
-                className="flex flex-col bg-surface border border-border rounded-xl p-4 hover:border-primary transition-colors"
-              >
-                <div className="h-11 w-11 rounded-full bg-secondary/15 text-secondary-ink flex items-center justify-center">
-                  <Bean size={20} aria-hidden />
-                </div>
-                <div className="mt-4 text-sm text-muted truncate">{bean.roastery}</div>
-                <div className="font-bold text-ink line-clamp-2">{bean.beanName}</div>
-                <div className="mt-auto pt-3 font-mono text-xs text-muted">
-                  {t('dashboard:brewCount', { count: brewCountByBean[bean.id] })}
-                </div>
-              </Link>
-            ))}
+            {favoriteBeans.map((bean) => {
+              const photoSrc = beanPhotoSrc(bean.photoUrl)
+              return (
+                <Link
+                  key={bean.id}
+                  to={`/beans/${bean.id}`}
+                  className="flex flex-col bg-surface border border-border rounded-xl p-4 hover:border-primary transition-colors"
+                >
+                  <div className="h-16 w-16 overflow-hidden rounded-lg bg-secondary/15 text-secondary-ink flex items-center justify-center">
+                    {photoSrc ? (
+                      <img
+                        src={photoSrc}
+                        alt={t('beans:photoAlt', { name: bean.beanName })}
+                        loading="lazy"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <Bean size={24} aria-hidden />
+                    )}
+                  </div>
+                  <div className="mt-4 text-sm text-muted truncate">{bean.roastery}</div>
+                  <div className="font-bold text-ink line-clamp-2">{bean.beanName}</div>
+                  <div className="mt-auto pt-3 font-mono text-xs text-muted">
+                    {t('dashboard:brewCount', { count: brewCountByBean[bean.id] })}
+                  </div>
+                </Link>
+              )
+            })}
           </div>
         </section>
       )}

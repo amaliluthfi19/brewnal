@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { LanguageToggle } from '../ui/LanguageToggle'
+import { Logo } from '../ui/Logo'
 
 interface AuthLayoutProps {
   illustration: string
@@ -17,7 +18,7 @@ export function AuthLayout({ illustration, illustrationAlt, title, subtitle, chi
     <div className="min-h-screen bg-app-gradient lg:grid lg:grid-cols-2">
       {/* Brand panel — desktop only */}
       <aside className="hidden lg:flex flex-col justify-between p-12">
-        <span className="font-display text-3xl font-black text-primary">brewnal</span>
+        <Logo className="h-12 self-start" />
 
         <div className="flex flex-col items-center text-center">
           <img src={illustration} alt={illustrationAlt} className="w-auto max-w-sm max-h-80 h-auto object-contain mb-10" />
@@ -54,7 +55,7 @@ export function AuthLayout({ illustration, illustrationAlt, title, subtitle, chi
               aria-hidden="true"
               className="mx-auto w-auto max-w-48 max-h-36 sm:max-h-44 h-auto object-contain mb-4"
             />
-            <span className="block font-display text-4xl font-black text-primary">brewnal</span>
+            <Logo className="h-12 mx-auto" />
           </div>
 
           <div className="bg-surface border border-border rounded-xl p-6 sm:p-8">
